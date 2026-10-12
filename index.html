@@ -1,0 +1,2215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mattias Malk · The Route</title>
+<meta name="description" content="Mattias Malk, Product Owner, Product Analyst and Business Analyst in Tallinn, Estonia. Ride along with one freight delivery, from paper to digital flow.">
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230B1220'/%3E%3Cpath d='M5 23h22' stroke='%233EE6D0' stroke-width='2.5'/%3E%3Crect x='7' y='10' width='12' height='10' fill='%23F2B544'/%3E%3Crect x='19' y='13' width='6' height='7' fill='%23E8ECF1'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B1220; --amber:#F2B544; --cyan:#3EE6D0; --text:#E8ECF1; --muted:#AEB9C9;
+  --accent:#F2B544; --line:rgba(232,236,241,.14);
+  --head:'Space Grotesk',system-ui,sans-serif; --body:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --gutter:clamp(16px,5vw,80px);
+}
+*{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;color:var(--text);background:var(--bg);font:400 17px/1.6 var(--body);touch-action:pan-y;-webkit-font-smoothing:antialiased}
+main{position:relative;z-index:3;overflow-x:clip}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- Fixed layers ---------- */
+#scene{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;display:block;z-index:0;opacity:0;transition:opacity 1.8s ease}
+.ready #scene{opacity:1}
+#scrim{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,rgba(11,18,32,.88) 0%,rgba(11,18,32,.62) 30%,rgba(11,18,32,.12) 56%,rgba(11,18,32,0) 70%)}
+#labels{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;transform:translate(-9999px,0);padding:4px 8px;border-radius:2px;white-space:nowrap;
+  font:500 12px/1.2 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--text);
+  background:rgba(11,18,32,.78);border:1px solid rgba(62,230,208,.5);opacity:0;transition:opacity .35s ease;will-change:transform}
+.lbl.amber{border-color:rgba(242,181,68,.6)}
+.lbl.big{font:600 15px/1.2 var(--head);letter-spacing:.02em;text-transform:none;padding:6px 10px;border-color:var(--cyan)}
+.lbl.small{font-size:11px;padding:3px 6px;border-color:rgba(232,236,241,.25)}
+.lbl.on{opacity:1}
+
+.hud-btn{position:fixed;z-index:6;top:14px;right:14px;padding:8px 12px;border-radius:3px;border:1px solid rgba(232,236,241,.3);
+  background:rgba(11,18,32,.7);color:var(--text);font:500 13px/1 var(--body);cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.hud-btn:hover{background:var(--text);color:var(--bg)}
+.hud-btn[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}
+.hud-btn[aria-pressed="true"]:hover{background:var(--cyan);color:var(--bg)}
+
+.odo{position:fixed;z-index:6;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:3px;
+  background:rgba(11,18,32,.78);border:1px solid rgba(232,236,241,.18);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  font:500 15px/1 var(--body);font-variant-numeric:tabular-nums;pointer-events:none}
+.odo-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.odo-digits{display:flex;align-items:center;gap:2px}
+.odo .cell{display:block;width:.78em;height:1.3em;overflow:hidden;background:rgba(232,236,241,.06);border-radius:2px;text-align:center}
+.odo .cell.tenth{color:var(--accent)}
+.odo .strip{display:block;will-change:transform}
+.odo .strip span{display:block;height:1.3em;line-height:1.3em}
+.odo-dot{color:var(--muted);margin:0 1px}
+.odo-unit{color:var(--muted);font-size:12px}
+
+.spec-cap{position:fixed;z-index:6;left:50%;bottom:16px;transform:translateX(-50%);padding:8px 12px;border-radius:3px;
+  border:1px solid rgba(62,230,208,.5);background:rgba(11,18,32,.85);color:var(--cyan);font:500 13px/1.2 var(--body);display:none}
+.spec .spec-cap{display:block}
+
+/* ---------- Chapters ---------- */
+.chapter{position:relative;min-height:210vh;padding:0 var(--gutter);display:flex;flex-direction:column}
+.track{display:flex;flex-direction:column;min-height:170vh}
+.panel{position:sticky;top:12vh;margin-top:12vh;max-width:560px;padding:28px 30px 30px;border-radius:4px;
+  background:linear-gradient(180deg,rgba(11,18,32,.74),rgba(11,18,32,.56));border:1px solid rgba(232,236,241,.07);
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.panel.flow{position:relative;top:auto}
+.eyebrow{margin:0 0 12px;font:500 13px/1.4 var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--amber)}
+.eyebrow.cyan{color:var(--cyan)}
+h1,h2,h3{font-family:var(--head);margin:0;color:var(--text)}
+h1{font-size:clamp(46px,7.4vw,98px);font-weight:700;line-height:.98;letter-spacing:-.025em}
+h2{font-size:clamp(32px,4.2vw,54px);font-weight:600;line-height:1.06;letter-spacing:-.02em;margin-bottom:18px}
+h2:focus{outline:none}
+h3{font-size:20px;font-weight:600;letter-spacing:-.01em}
+p{margin:0 0 14px}
+.panel p:last-child{margin-bottom:0}
+.muted{color:var(--muted)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:12px 18px;border-radius:3px;
+  border:1px solid rgba(232,236,241,.42);background:rgba(11,18,32,.45);color:var(--text);font:500 15px/1.1 var(--body);
+  text-decoration:none;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s}
+.btn:hover{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn.primary{border-color:var(--amber)}
+.btn.primary:hover{background:var(--amber);border-color:var(--amber);color:var(--bg)}
+.btn.cyan{border-color:var(--cyan)}
+.btn.cyan:hover{background:var(--cyan);border-color:var(--cyan);color:var(--bg)}
+.link{background:none;border:0;padding:4px 2px;color:var(--muted);font:500 13px/1 var(--body);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.link:hover{color:var(--text)}
+
+/* Hero */
+#ch-hero{min-height:150vh}
+#ch-hero .panel{position:relative;top:auto;margin-top:0;padding:max(19vh,104px) 0 0;max-width:660px;background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+.hero-sub{margin:20px 0 10px;font:500 clamp(18px,1.8vw,22px)/1.4 var(--head);color:var(--amber);letter-spacing:-.005em}
+.hero-line{font-size:clamp(18px,1.6vw,21px);max-width:30em;margin-bottom:28px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.hero-meta{font-size:14px;color:var(--muted)}
+.scroll-hint{position:absolute;left:var(--gutter);top:calc(100vh - 56px);margin:0;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.scroll-hint::before{content:"";width:28px;height:1px;background:var(--muted)}
+
+/* Bottleneck */
+.game{margin:0}
+.track-story{min-height:120vh}
+.track-game{min-height:150vh}
+.game-panel{max-width:460px}
+.game-title{margin:0 0 12px;font:600 22px/1.2 var(--head);letter-spacing:-.01em}
+.lanes{display:flex;flex-wrap:wrap;gap:10px}
+.lane-btn{min-width:104px}
+.lane-btn[aria-pressed="true"]{background:var(--cyan);color:var(--bg);border-color:var(--cyan)}
+.lane-caption{min-height:3.2em;margin:12px 0 6px;color:var(--text)}
+.counter{display:flex;align-items:baseline;gap:10px;margin:0;font-size:14px;color:var(--muted)}
+.counter strong{font:600 26px/1 var(--head);color:var(--cyan);font-variant-numeric:tabular-nums}
+.results{margin-top:30vh;margin-bottom:24vh;max-width:760px}
+.cleared-line{font:500 clamp(19px,2vw,24px)/1.4 var(--head);margin-bottom:26px}
+.cleared-line strong{color:var(--cyan);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.stat{padding:14px 0 0;border-top:2px solid rgba(232,236,241,.18);cursor:default;transition:border-color .25s}
+.stat:hover,.stat:focus-visible,.stat.on{border-top-color:var(--cyan)}
+.stat .num{display:block;font:600 clamp(40px,4.6vw,62px)/1 var(--head);letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:10px}
+.stat .cap{display:block;font-size:15px;color:var(--muted);line-height:1.45}
+
+/* Bridge */
+.planks{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.planks li{padding:10px 12px;border-left:2px solid rgba(242,181,68,.55);background:rgba(232,236,241,.04);font-size:15.5px;line-height:1.45;transition:border-color .4s,background-color .4s}
+.planks li.landed{border-left-color:var(--cyan);background:rgba(62,230,208,.08)}
+
+/* Signal */
+.mast-hint{font-size:14px;color:var(--muted)}
+.mast-btn{position:fixed;left:0;top:0;z-index:4;width:56px;height:150px;margin:0;padding:0;border:0;border-radius:3px;background:transparent;cursor:help;
+  transform:translate(-9999px,0);visibility:hidden}
+.mast-btn:focus-visible{outline:2px solid var(--cyan)}
+.mast-tip{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);padding:8px 12px;border-radius:3px;white-space:pre;
+  background:rgba(11,18,32,.92);border:1px solid var(--cyan);color:var(--text);font:500 14px/1.2 var(--body);opacity:0;pointer-events:none;transition:opacity .2s}
+.mast-btn:hover .mast-tip,.mast-btn:focus-visible .mast-tip,.mast-btn.open .mast-tip{opacity:1}
+
+/* Path */
+.path-panel{max-width:620px;margin-top:40vh;margin-bottom:30vh}
+.timeline{list-style:none;margin:6px 0 30px;padding:0}
+.timeline li{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:11px 0;border-top:1px solid var(--line);font-size:16px}
+.timeline .yr{font-weight:500;color:var(--cyan);font-variant-numeric:tabular-nums}
+.toolbox{display:grid;grid-template-columns:1fr;gap:4px}
+.toolbox > div{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:10px 0;border-top:1px solid var(--line)}
+.toolbox h3{font-size:16px;color:var(--cyan);padding-top:1px}
+.toolbox p{font-size:15.5px;color:var(--text)}
+
+/* Delivery */
+#ch-delivery{min-height:200vh;justify-content:flex-end}
+.delivery{max-width:620px;margin:0 0 6vh;padding:28px 0 0}
+.delivery-head{padding:20px 24px 4px;border-radius:4px;background:linear-gradient(180deg,rgba(11,18,32,.78),rgba(11,18,32,.6));
+  border:1px solid rgba(232,236,241,.07);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.delivery-head h2{margin-bottom:14px}
+.note{position:relative;margin-top:14px;padding:26px 26px 24px;border-radius:4px;overflow:hidden;
+  background:linear-gradient(170deg,rgba(18,32,52,.95),rgba(11,18,32,.95));border:1px solid rgba(62,230,208,.45);
+  box-shadow:0 0 0 1px rgba(62,230,208,.08),0 30px 80px rgba(0,0,0,.45),0 0 60px rgba(62,230,208,.08)}
+.note.arrive{animation:arrive .9s cubic-bezier(.2,.9,.25,1) both}
+@keyframes arrive{from{opacity:0;transform:translateY(40px) scale(.94)}to{opacity:1;transform:none}}
+.note-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid rgba(62,230,208,.3);margin-bottom:6px}
+.note-kicker{display:block;font:500 12px/1.2 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:6px}
+.note-head h3{font-size:26px}
+.note-no{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.note-rows{margin:0}
+.note-rows div{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.note-rows dt{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+.note-rows dd{margin:0;font-size:16px}
+.field{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center;padding:12px 0}
+.field label{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field input{width:100%;min-height:44px;padding:10px 12px;border-radius:3px;border:1px solid rgba(232,236,241,.3);background:rgba(11,18,32,.6);color:var(--text);font:400 16px/1.2 var(--body)}
+.field input::placeholder{color:#8792a3}
+.field input:focus-visible{border-color:var(--cyan)}
+.sig{position:relative;margin:4px 0 16px}
+.sig-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+#sigpad{display:block;width:100%;height:150px;border-radius:3px;background:rgba(232,236,241,.05);border:1px dashed rgba(232,236,241,.3);touch-action:none;cursor:crosshair}
+.sig-hint{position:absolute;left:14px;bottom:16px;font-size:13px;color:#8792a3;pointer-events:none;border-top:1px solid rgba(232,236,241,.25);padding-top:4px;width:calc(100% - 28px)}
+.sig.has .sig-hint{opacity:0}
+.note-actions{display:flex;flex-wrap:wrap;gap:10px}
+.delivered{margin:16px 0 0;font:500 18px/1.4 var(--head);color:var(--cyan)}
+.stamp{position:absolute;right:20px;top:70px;padding:8px 14px 6px;border:2.5px solid var(--cyan);border-radius:3px;color:var(--cyan);text-align:center;
+  font:700 26px/1 var(--head);letter-spacing:.12em;text-transform:uppercase;transform:rotate(-9deg);opacity:0;pointer-events:none;
+  background:rgba(11,18,32,.55);box-shadow:0 0 24px rgba(62,230,208,.25)}
+.stamp small{display:block;margin-top:5px;font:500 11px/1 var(--body);letter-spacing:.06em}
+.note.signed .stamp{opacity:1;animation:stamp .6s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes stamp{0%{opacity:0;transform:rotate(-9deg) scale(2.3)}55%{opacity:1;transform:rotate(-9deg) scale(.9)}100%{opacity:1;transform:rotate(-9deg) scale(1)}}
+.contact{display:flex;flex-wrap:wrap;gap:8px 22px;margin:24px 0 0;font-size:15px}
+.contact a{text-underline-offset:3px;text-decoration-color:rgba(232,236,241,.4)}
+.contact a:hover{color:var(--cyan)}
+footer{position:relative;z-index:3;padding:22px var(--gutter) 70px;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 20px}
+
+/* ---------- Phones ---------- */
+@media (max-width:760px){
+  body{font-size:16px}
+  #scrim{background:linear-gradient(0deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.8) 38%,rgba(11,18,32,.15) 62%,rgba(11,18,32,0) 74%)}
+  .chapter{min-height:200vh}
+  .panel{top:auto;bottom:62px;margin-top:auto;margin-bottom:62px;padding:20px 18px 22px;max-width:none}
+  .track{min-height:150vh}
+  .track-story{min-height:130vh}
+  .track-game{min-height:170vh}
+  .game-panel .lane-btn{flex:1 1 0;min-width:0;padding-left:8px;padding-right:8px}
+  .lane-caption{min-height:3.1em;margin:10px 0 4px;font-size:15px}
+  .panel.flow{bottom:auto}
+  #ch-hero{min-height:135vh}
+  #ch-hero .panel{padding-top:max(56vh,330px)}
+  .scroll-hint{display:none}
+  .results{margin-top:20vh}
+  .stats{grid-template-columns:1fr;gap:14px}
+  .planks{grid-template-columns:1fr;gap:6px}
+  .planks li{padding:7px 10px;font-size:14.5px;line-height:1.4}
+  #ch-bridge h2{margin-bottom:12px}
+  .timeline li{grid-template-columns:1fr;gap:2px}
+  .toolbox > div{grid-template-columns:1fr;gap:2px}
+  .path-panel{margin-top:60vh}
+  .note{padding:20px 16px}
+  .delivery-head{padding:16px 16px 2px}
+  .note-rows div,.field{grid-template-columns:1fr;gap:4px}
+  .stamp{top:58px;right:12px;font-size:21px}
+  .btn{min-height:44px;padding:11px 15px}
+  .actions .btn{flex:1 1 auto}
+  .odo{bottom:12px;right:12px;font-size:14px}
+}
+
+/* ---------- No WebGL: clean text page ---------- */
+.no-webgl #scene,.no-webgl #labels,.no-webgl .mast-btn,.no-webgl .webgl-only{display:none!important}
+.no-webgl #scrim{display:none}
+.no-webgl .chapter{min-height:auto;padding-top:9vh;padding-bottom:9vh}
+.no-webgl .track{min-height:auto}
+.no-webgl .panel{position:relative;top:auto;bottom:auto;margin:0}
+.no-webgl #ch-hero{min-height:auto}
+.no-webgl #ch-hero .panel{padding-top:max(14vh,72px)}
+.no-webgl .results,.no-webgl .path-panel{margin:28px 0 0}
+.no-webgl #ch-delivery{min-height:auto;background:linear-gradient(180deg,var(--bg),#16294a 70%,#2a3f63)}
+
+@media (hover:none){.spec-hint{display:none}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<canvas id="scene" aria-hidden="true"></canvas>
+<div id="scrim" aria-hidden="true"></div>
+<div id="labels" aria-hidden="true"></div>
+
+<button class="hud-btn" id="pause-btn" type="button" aria-pressed="false">Pause motion</button>
+<div class="odo" aria-hidden="true">
+  <span class="odo-label">Odometer</span>
+  <span class="odo-digits" id="odo-digits"></span>
+  <span class="odo-unit">km</span>
+</div>
+<p class="spec-cap" role="status">Spec view. Press S to go back.</p>
+
+<main>
+  <!-- 1 Hero -->
+  <section class="chapter" id="ch-hero" aria-labelledby="h-hero">
+    <div class="panel">
+      <h1 id="h-hero" tabindex="-1">Mattias Malk</h1>
+      <p class="hero-sub">Product Owner, Product Analyst, Business Analyst</p>
+      <p class="hero-line">I find where a process gets stuck, then build the product around fixing it.</p>
+      <div class="actions">
+        <a class="btn primary" href="#ch-storm" data-jump="1">Start the route</a>
+        <a class="btn" href="cv.pdf" download>Download CV</a>
+        <a class="btn" href="#delivery" data-jump="end">Skip to delivery</a>
+      </div>
+      <p class="hero-meta">Tallinn, Estonia. Hybrid or remote. Available now.</p>
+    </div>
+    <p class="scroll-hint webgl-only" aria-hidden="true">Scroll to drive</p>
+  </section>
+
+  <!-- 2 Paper storm -->
+  <section class="chapter" id="ch-storm" aria-labelledby="h-storm">
+    <div class="panel">
+      <p class="eyebrow">The old way</p>
+      <h2 id="h-storm" tabindex="-1">This is what 20,000 sheets of paper looks like</h2>
+      <p>Roughly the paper the platform I worked on replaced. Every sheet was a consignment note someone had to print, sign, carry and file.</p>
+    </div>
+  </section>
+
+  <!-- 3 Bottleneck -->
+  <section class="chapter" id="ch-bottleneck" aria-labelledby="h-bottleneck">
+    <div class="track track-story">
+      <div class="panel">
+        <p class="eyebrow">digiCMR at ATV Transpordi AS, later Ybil, 2023 to 2025</p>
+        <h2 id="h-bottleneck" tabindex="-1">Most documents stopped after the first step</h2>
+        <p>I was the business analyst and acting product owner for an electronic CMR platform. The data showed that most documents stalled right after they were created. So I made completion rate the central metric of the roadmap.</p>
+      </div>
+    </div>
+    <div class="track track-game">
+      <div class="panel game-panel">
+        <div class="game" role="group" aria-labelledby="game-title">
+          <p class="game-title" id="game-title">Build a bypass</p>
+          <div class="lanes">
+            <button class="btn cyan lane-btn" type="button" data-lane="link" aria-pressed="false">Link</button>
+            <button class="btn cyan lane-btn" type="button" data-lane="qr" aria-pressed="false">QR code</button>
+            <button class="btn cyan lane-btn" type="button" data-lane="auto" aria-pressed="false">Automatic</button>
+          </div>
+          <p class="lane-caption" id="lane-caption" aria-live="polite">Pick a way past the checkpoint.</p>
+          <p class="counter">Documents cleared <strong id="cleared-count">0</strong></p>
+        </div>
+      </div>
+    </div>
+    <div class="panel flow results" id="results">
+      <p class="cleared-line" id="cleared-line" aria-live="polite" hidden></p>
+      <div class="stats">
+        <div class="stat" data-key="issued" data-to="6865" tabindex="0" aria-label="6,865 eCMRs issued"><span class="num" aria-hidden="true">0</span><span class="cap" aria-hidden="true">eCMRs issued</span></div>
+        <div class="stat" data-key="sheets" data-to="20000" data-suffix="+" tabindex="0" aria-label="20,000+ paper sheets replaced, approximately"><span class="num" aria-hidden="true">0</span><span class="cap" aria-hidden="true">paper sheets replaced (approx.)</span></div>
+        <div class="stat" data-key="month" data-to="378" tabindex="0" aria-label="378 eCMRs in the final month, against a final-year average of about 136"><span class="num" aria-hidden="true">0</span><span class="cap" aria-hidden="true">eCMRs in the final month, against a final-year average of about 136</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 Paving -->
+  <section class="chapter" id="ch-paving" aria-labelledby="h-paving">
+    <div class="panel">
+      <p class="eyebrow cyan">Paving the road while driving on it</p>
+      <h2 id="h-paving" tabindex="-1">Building for rules still being written</h2>
+      <p>I defined the platform's eCMR regulatory reporting under the EU eFTI rules while they were still in draft. I joined meetings with the drafters and commented on the draft documents directly and through advisors.</p>
+    </div>
+  </section>
+
+  <!-- 5 Bridge -->
+  <section class="chapter" id="ch-bridge" aria-labelledby="h-bridge">
+    <div class="panel">
+      <p class="eyebrow cyan">The bridge</p>
+      <h2 id="h-bridge" tabindex="-1">One product, two languages</h2>
+      <ul class="planks" id="planks">
+        <li>Requirements, workflow maps and developer specs</li>
+        <li>APIs and integrations worked out with developers</li>
+        <li>Introduced Scrum and worked as Scrum Master</li>
+        <li>Led QA</li>
+        <li>SQL on production data for sales, operations and management</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 Signal -->
+  <section class="chapter" id="ch-signal" aria-labelledby="h-signal">
+    <div class="panel">
+      <p class="eyebrow cyan">Estonian Defence Forces, 2025 to 2026</p>
+      <h2 id="h-signal" tabindex="-1">Communications NCO</h2>
+      <p>Led a team of three, trained around 70 conscripts, and helped roll out new communications technology across the unit.</p>
+      <p class="mast-hint webgl-only">The mast is saying something. Hover or tap it.</p>
+    </div>
+    <button class="mast-btn" id="mast-btn" type="button" tabindex="-1" aria-describedby="mast-tip">
+      <span class="sr-only">Radio mast</span>
+      <span class="mast-tip" id="mast-tip" role="tooltip">-- --  That is Morse for MM.</span>
+    </button>
+  </section>
+
+  <!-- 7 Path so far -->
+  <section class="chapter" id="ch-path" aria-labelledby="h-path">
+    <div class="panel flow path-panel">
+      <p class="eyebrow cyan">Seen from above</p>
+      <h2 id="h-path" tabindex="-1">Path so far</h2>
+      <ol class="timeline">
+        <li><span class="yr">2019 to 2024</span><span>BSc in Informatics, Tallinn University of Technology</span></li>
+        <li><span class="yr">2021 to 2022</span><span>Junior Software Developer, Softwerk (C#, .NET, Blazor)</span></li>
+        <li><span class="yr">2023 to 2025</span><span>Business Analyst and acting Product Owner for digiCMR, at ATV Transpordi AS and its spinoff Ybil</span></li>
+        <li><span class="yr">2025 to 2026</span><span>Communications NCO, Estonian Defence Forces</span></li>
+        <li><span class="yr">2026</span><span>From Junior to Senior Software Developer course, TalTech</span></li>
+        <li><span class="yr">In progress</span><span>Associate Data Scientist in Python, DataCamp</span></li>
+      </ol>
+      <div class="toolbox">
+        <div><h3>Product</h3><p>Requirements, process mapping, funnel and drop-off analysis, KPI definition, backlog ownership, Scrum, QA, stakeholder management.</p></div>
+        <div><h3>Data and tech</h3><p>SQL, Excel, REST APIs and integrations, C# and .NET, Java, Python and pandas (learning).</p></div>
+        <div><h3>Tools</h3><p>Jira, Confluence, Claude Code, Cursor.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 Delivery -->
+  <section class="chapter" id="ch-delivery" aria-labelledby="h-delivery">
+    <div class="delivery" id="delivery">
+      <div class="delivery-head">
+        <p class="eyebrow cyan">Destination: Tallinn</p>
+        <h2 id="h-delivery" tabindex="-1">One delivery waiting for your signature</h2>
+      </div>
+      <article class="note" id="note" aria-labelledby="note-title">
+        <header class="note-head">
+          <div><span class="note-kicker">eCMR</span><h3 id="note-title">Consignment note</h3></div>
+          <span class="note-no">No. 6,866</span>
+        </header>
+        <dl class="note-rows">
+          <div><dt>Sender</dt><dd>Mattias Malk, Tallinn</dd></div>
+          <div><dt>Goods</dt><dd>One Product Owner, Product Analyst or Business Analyst. Available now. Estonian and English.</dd></div>
+          <div><dt>Delivery terms</dt><dd>Tallinn hybrid or fully remote.</dd></div>
+        </dl>
+        <div class="field">
+          <label for="consignee">Consignee:</label>
+          <input id="consignee" name="consignee" type="text" autocomplete="organization" placeholder="Your name or company">
+        </div>
+        <div class="sig" id="sig">
+          <div class="sig-top"><span id="sig-label">Signature</span><button class="link" type="button" id="sig-clear">Clear</button></div>
+          <canvas id="sigpad" role="img" aria-labelledby="sig-label" aria-describedby="sig-desc"></canvas>
+          <span class="sig-hint">Sign here with a mouse or finger</span>
+          <span class="sr-only" id="sig-desc">Drawing area for your signature. Signing is optional; the buttons below work without it.</span>
+        </div>
+        <div class="note-actions">
+          <button class="btn primary" type="button" id="sign-send">Sign and send</button>
+          <button class="btn" type="button" id="download-note">Download the signed note</button>
+        </div>
+        <p class="delivered" id="delivered" role="status" hidden>Delivered. That is how an eCMR should feel.</p>
+        <div class="stamp" aria-hidden="true">Signed<small id="stamp-date"></small></div>
+      </article>
+      <p class="contact">
+        <a href="mailto:mattias.malk@gmail.com">mattias.malk@gmail.com</a>
+        <a href="https://www.linkedin.com/in/mattiasmalk" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="cv.pdf" download>Download CV</a>
+      </p>
+    </div>
+  </section>
+</main>
+<footer><span>Mattias Malk, Tallinn</span><span id="year">2026</span><span class="webgl-only spec-hint">Press S for spec view.</span></footer>
+
+<!-- ============ Core: scroll, UI, game, signature (works without WebGL) ============ -->
+<script>
+(function () {
+  'use strict';
+  var doc = document.documentElement;
+  var R = window.Route = {
+    _l: {},
+    on: function (n, f) { (this._l[n] = this._l[n] || []).push(f); },
+    emit: function (n, d) { (this._l[n] || []).forEach(function (f) { f(d); }); }
+  };
+  var clamp = function (x, a, b) { return Math.min(b, Math.max(a, x)); };
+  var sstep = function (a, b, x) { var t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  R.clamp = clamp; R.sstep = sstep;
+  // ?reduce and ?nowebgl preview the reduced-motion and text-only versions
+  R.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || /[?&]reduce\b/.test(location.search);
+  R.paused = false; R.spec = false; R.time = 0;
+  R.motionOff = function () { return R.reduced || R.paused; };
+  R.isPhone = matchMedia('(max-width: 760px)').matches ||
+    (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820);
+
+  // Simplified mainland Estonia, [lon, lat]. The route follows the first 29 points
+  // from Narva-Joesuu clockwise round the border and coast, ending in Tallinn.
+  R.outline = [[28.04,59.46],[28.19,59.37],[27.95,59.2],[27.72,59.0],[27.2,58.98],[27.03,58.8],[27.1,58.55],[27.35,58.3],
+    [27.55,58.05],[27.75,57.85],[27.55,57.55],[27.1,57.55],[26.5,57.55],[26.03,57.77],[25.55,57.92],[25.05,58.04],[24.35,57.87],
+    [24.48,58.1],[24.5,58.38],[23.98,58.3],[23.75,58.45],[23.52,58.58],[23.5,58.8],[23.53,58.95],[23.42,59.15],[23.78,59.25],
+    [24.05,59.37],[24.35,59.43],[24.75,59.44],[25.2,59.52],[25.7,59.62],[26.3,59.6],[26.9,59.47],[27.45,59.43]];
+  R.routeCount = 29;
+  // The larger west coast islands: Saaremaa, Muhu, Hiiumaa and Vormsi (map only, the road stays on the mainland)
+  R.islands = [
+    [[22.3,58.62],[22.75,58.63],[23.1,58.6],[23.3,58.5],[23.05,58.38],[22.75,58.28],[22.4,58.22],[22.25,58.05],[22.05,57.91],
+     [22.0,58.05],[21.95,58.2],[21.83,58.32],[21.95,58.45],[22.1,58.55]],
+    [[23.1,58.64],[23.35,58.63],[23.4,58.56],[23.2,58.52],[23.05,58.56]],
+    [[22.05,58.92],[22.3,59.0],[22.55,59.08],[22.8,58.98],[23.0,58.86],[22.8,58.75],[22.5,58.7],[22.3,58.78],[22.2,58.88]],
+    [[23.1,59.02],[23.3,59.04],[23.36,58.98],[23.15,58.95]]
+  ];
+  (function () {
+    var km = 0, rad = Math.PI / 180;
+    for (var i = 1; i < R.routeCount; i++) {
+      var a = R.outline[i - 1], b = R.outline[i];
+      var dLat = (b[1] - a[1]) * rad, dLon = (b[0] - a[0]) * rad;
+      var h = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(a[1] * rad) * Math.cos(b[1] * rad) * Math.pow(Math.sin(dLon / 2), 2);
+      km += 2 * 6371 * Math.asin(Math.sqrt(h));
+    }
+    R.totalKm = Math.round(km * 1.06);
+  })();
+
+  // Where each chapter happens along the road (0..1 of road length).
+  R.U = { storm0: 0.03, storm1: 0.105, tablet: 0.1, check: 0.2, pave0: 0.265, pave1: 0.375, gap: 0.47, mast: 0.635, dock: 0.985 };
+  R.GAP_HALF = 13;
+  // Keyframes: [chapter coordinate, road position]
+  R.buildKF = function (L) {
+    var U = R.U, gh = R.GAP_HALF;
+    var stop = U.check - (2.6 + 32 * 1.7 + 5) / L;
+    var edge = U.gap - (gh + 3.4) / L, across = U.gap + (gh + 24) / L, approach = U.gap - (gh + 46) / L;
+    R.L = L;
+    R.stopU = stop;
+    R.KF = [[0, 0], [0.3, 0], [0.95, 0.012], [1.1, 0.03], [1.5, 0.066], [1.82, 0.082], [2.02, 0.088], [2.2, stop], [2.86, stop],
+      [3.08, U.check + 10 / L], [3.22, U.pave0 + 2 / L], [3.92, U.pave1 + 4 / L], [4.12, approach], [4.26, edge], [4.6, edge],
+      [4.93, across], [5.1, 0.6], [5.9, 0.66], [6.2, 0.7], [6.85, 0.935], [7.1, 0.958], [7.45, U.dock], [8, U.dock]];
+  };
+  R.buildKF(1650);
+  R.uFromC = function (C) {
+    var K = R.KF;
+    if (C <= K[0][0]) return K[0][1];
+    for (var i = 1; i < K.length; i++) {
+      if (C <= K[i][0]) {
+        var a = K[i - 1], b = K[i], t = (C - a[0]) / (b[0] - a[0]);
+        var e = t * t * (3 - 2 * t) * 0.5 + t * 0.5;
+        return a[1] + (b[1] - a[1]) * e;
+      }
+    }
+    return K[K.length - 1][1];
+  };
+
+  // ---------- Chapter measurement ----------
+  var secs = [].slice.call(document.querySelectorAll('.chapter'));
+  var tops = [], bounds = [];
+  function measure() {
+    var vh = innerHeight;
+    tops = secs.map(function (s) { return s.getBoundingClientRect().top + scrollY; });
+    var max = Math.max(1, doc.scrollHeight - vh);
+    bounds = tops.map(function (t, i) { return i === 0 ? 0 : Math.min(max - 1, Math.max(1, t - vh * 0.35)); });
+    for (var i = 1; i < bounds.length; i++) bounds[i] = Math.max(bounds[i], bounds[i - 1] + 1);
+    bounds.push(Math.max(max, bounds[bounds.length - 1] + 1));
+    R.maxScroll = max;
+  }
+  function cFromScroll(y) {
+    for (var i = 0; i < 8; i++) {
+      if (y < bounds[i + 1] || i === 7) return i + clamp((y - bounds[i]) / Math.max(1, bounds[i + 1] - bounds[i]), 0, 1);
+    }
+    return 8;
+  }
+  R.chapterTop = function (i) { return tops[i] || 0; };
+  // Scroll position for a chapter coordinate (used by keyboard nav and handy for debugging)
+  R.scrollForC = function (C) {
+    var i = Math.min(7, Math.floor(C)), t = C - i;
+    return bounds[i] + t * (bounds[i + 1] - bounds[i]);
+  };
+
+  // ---------- Odometer ----------
+  var odo = document.getElementById('odo-digits');
+  var strips = [];
+  function makeCell(cls) {
+    var c = document.createElement('span'); c.className = 'cell' + (cls ? ' ' + cls : '');
+    var s = document.createElement('span'); s.className = 'strip';
+    for (var d = 0; d <= 10; d++) { var n = document.createElement('span'); n.textContent = d % 10; s.appendChild(n); }
+    c.appendChild(s); odo.appendChild(c); strips.push(s);
+  }
+  for (var k = 0; k < 4; k++) makeCell();
+  var dot = document.createElement('span'); dot.className = 'odo-dot'; dot.textContent = '.'; odo.appendChild(dot);
+  makeCell('tenth');
+  var lastKm = -1;
+  function updateOdo(km) {
+    if (Math.abs(km - lastKm) < 0.004) return;
+    lastKm = km;
+    var places = [1000, 100, 10, 1, 0.1];
+    for (var i = 0; i < 5; i++) {
+      var x = km / places[i], digit = Math.floor(x) % 10, frac = x - Math.floor(x), pos;
+      if (i === 4) pos = digit + frac;
+      else pos = digit + clamp((frac - (1 - 0.1 / places[i] * 1)) * (places[i] / 0.1), 0, 1);
+      strips[i].style.transform = 'translateY(' + (-pos * 1.3).toFixed(3) + 'em)';
+    }
+  }
+
+  // ---------- Accent colour (amber to cyan) ----------
+  var lastAccent = -1;
+  function updateAccent(C) {
+    var m = sstep(1.4, 4.4, C);
+    if (Math.abs(m - lastAccent) < 0.01) return;
+    lastAccent = m;
+    var a = [242, 181, 68], b = [62, 230, 208];
+    doc.style.setProperty('--accent', 'rgb(' + a.map(function (v, i) { return Math.round(v + (b[i] - v) * m); }).join(',') + ')');
+  }
+
+  // ---------- Bridge list ----------
+  var plankEls = [].slice.call(document.querySelectorAll('#planks li'));
+  function updatePlanks(C) {
+    var t = clamp(C - 4, 0, 1);
+    plankEls.forEach(function (el, i) { el.classList.toggle('landed', t >= 0.1 + i * 0.09 + 0.1); });
+  }
+
+  // ---------- Mini-game ----------
+  var game = R.game = { queue: 36, max: 64, cleared: 0, lanes: { link: false, qr: false, auto: false }, done: false, pending: 0 };
+  var captions = {
+    link: 'Sign from a link, no app needed.',
+    qr: 'Sign by scanning a QR code, no account needed.',
+    auto: 'Signed automatically for customers integrated through their TMS.'
+  };
+  var laneBtns = [].slice.call(document.querySelectorAll('.lane-btn'));
+  var capEl = document.getElementById('lane-caption');
+  var countEl = document.getElementById('cleared-count');
+  var lineEl = document.getElementById('cleared-line');
+  function openCount() { return (game.lanes.link ? 1 : 0) + (game.lanes.qr ? 1 : 0) + (game.lanes.auto ? 1 : 0); }
+  function renderCount() {
+    countEl.textContent = game.cleared;
+    if (game.done && game.pending === 0) {
+      lineEl.hidden = false;
+      lineEl.innerHTML = 'You just cleared <strong>' + game.cleared + '</strong> document' + (game.cleared === 1 ? '' : 's') + '. The real platform issued 6,865.';
+    }
+  }
+  function openLane(id, silent) {
+    if (!silent) capEl.textContent = captions[id];
+    if (game.lanes[id]) return;
+    game.lanes[id] = true;
+    laneBtns.forEach(function (b) { if (b.dataset.lane === id) b.setAttribute('aria-pressed', 'true'); });
+    var n = openCount(), peel;
+    if (n >= 3) peel = game.queue; else if (n === 1) peel = Math.round(game.queue * 0.4); else peel = Math.round(game.queue * 0.5);
+    game.queue -= peel;
+    if (n >= 3) game.done = true;
+    var instant = R.motionOff();
+    R.emit('lane', { id: id, peel: peel, instant: instant });
+    if (instant) { game.cleared += peel; renderCount(); return; }
+    game.pending += peel;
+    for (var i = 0; i < peel; i++) {
+      setTimeout(function () { game.cleared++; game.pending--; renderCount(); }, 900 + i * 110);
+    }
+    renderCount();
+  }
+  R.openLane = openLane;
+  laneBtns.forEach(function (b) { b.addEventListener('click', function () { openLane(b.dataset.lane); }); });
+  function autoClear() {
+    if (game.done) return;
+    var ids = ['link', 'qr', 'auto'].filter(function (id) { return !game.lanes[id]; });
+    ids.forEach(function (id, i) { setTimeout(function () { openLane(id, true); }, R.motionOff() ? 0 : i * 380); });
+    if (ids.length) capEl.textContent = 'All three bypasses are open. The queue is moving.';
+  }
+  if (R.reduced) { openLane('link', true); openLane('qr', true); openLane('auto', true); capEl.textContent = 'All three bypasses are open. The queue is moving.'; }
+  var growAcc = 0;
+  function updateGame(dt, C) {
+    if (!game.done && !R.motionOff() && C > 1.6 && C < 3.05 && game.queue < game.max) {
+      growAcc += dt;
+      if (growAcc > 1.15) { growAcc = 0; game.queue++; }
+    }
+    if (!game.done && C > 2.78 && !doc.classList.contains('no-webgl')) autoClear();
+  }
+  if ('IntersectionObserver' in window) {
+    // Clear the queue for anyone who scrolls on without playing
+    new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) autoClear(); }); }, { rootMargin: '0px 0px -55% 0px' })
+      .observe(document.getElementById('results'));
+  }
+
+  // ---------- Big numbers ----------
+  var statEls = [].slice.call(document.querySelectorAll('.stat'));
+  function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+  function countUp(el) {
+    if (el.dataset.done) return; el.dataset.done = '1';
+    var to = +el.dataset.to, suf = el.dataset.suffix || '', num = el.querySelector('.num');
+    if (R.reduced) { num.textContent = fmt(to) + suf; return; }
+    var t0 = performance.now(), dur = 1700;
+    (function step(now) {
+      var t = clamp((now - t0) / dur, 0, 1), e = 1 - Math.pow(1 - t, 3);
+      num.textContent = fmt(to * e) + (t >= 1 ? suf : '');
+      if (t < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  if ('IntersectionObserver' in window) {
+    var so = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { statEls.forEach(countUp); so.disconnect(); } });
+    }, { threshold: 0.35 });
+    so.observe(document.querySelector('.stats'));
+  } else statEls.forEach(countUp);
+  var activeStat = null;
+  function setGlow(key) { activeStat = key; statEls.forEach(function (s) { s.classList.toggle('on', s.dataset.key === key); }); R.emit('glow', key); }
+  statEls.forEach(function (s) {
+    s.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') setGlow(s.dataset.key); });
+    s.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') setGlow(null); });
+    s.addEventListener('focus', function () { setGlow(s.dataset.key); });
+    s.addEventListener('blur', function () { setGlow(null); });
+    s.addEventListener('click', function (e) { if (e.pointerType !== 'mouse') setGlow(activeStat === s.dataset.key ? null : s.dataset.key); });
+  });
+
+  // ---------- Mast tooltip ----------
+  var mast = document.getElementById('mast-btn');
+  mast.addEventListener('click', function () { mast.classList.toggle('open'); });
+  mast.addEventListener('blur', function () { mast.classList.remove('open'); });
+
+  // ---------- Signature pad ----------
+  var pad = document.getElementById('sigpad'), pctx = pad.getContext('2d'), sigBox = document.getElementById('sig');
+  var strokes = [], cur = null;
+  R.strokes = strokes;
+  function sizePad() {
+    var r = pad.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+    if (!r.width) return;
+    pad.width = Math.round(r.width * d); pad.height = Math.round(r.height * d);
+    pctx.setTransform(d, 0, 0, d, 0, 0); redrawPad();
+  }
+  function drawStrokes(ctx, w, h, color, width) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = color; ctx.lineWidth = width;
+    strokes.forEach(function (s) {
+      ctx.beginPath();
+      s.forEach(function (p, i) { if (i === 0) ctx.moveTo(p[0] * w, p[1] * h); else ctx.lineTo(p[0] * w, p[1] * h); });
+      if (s.length === 1) ctx.lineTo(s[0][0] * w + 0.1, s[0][1] * h);
+      ctx.stroke();
+    });
+  }
+  R.drawStrokes = drawStrokes;
+  function redrawPad() {
+    var r = pad.getBoundingClientRect();
+    pctx.clearRect(0, 0, r.width, r.height);
+    drawStrokes(pctx, r.width, r.height, '#E8ECF1', 2.4);
+    sigBox.classList.toggle('has', strokes.length > 0);
+  }
+  function padPoint(e) { var r = pad.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1)]; }
+  pad.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    try { pad.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    cur = [padPoint(e)]; strokes.push(cur); redrawPad();
+  });
+  pad.addEventListener('pointermove', function (e) {
+    if (!cur) return;
+    var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    if (!evs.length) evs = [e];
+    evs.forEach(function (ev) { cur.push(padPoint(ev)); });
+    redrawPad();
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (t) { pad.addEventListener(t, function () { cur = null; }); });
+  document.getElementById('sig-clear').addEventListener('click', function () { strokes.length = 0; redrawPad(); });
+
+  var noteEl = document.getElementById('note'), nameEl = document.getElementById('consignee');
+  var signedAt = null;
+  function dateStr(d) { return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  document.getElementById('sign-send').addEventListener('click', function () {
+    var name = nameEl.value.trim();
+    signedAt = new Date();
+    var body = 'Consignee: ' + (name || '(not given)') + '\n' + 'Signed: ' + dateStr(signedAt) + '\n\n' +
+      'Delivery accepted: one product person. Let us talk about next steps.\n';
+    var href = 'mailto:mattias.malk@gmail.com?subject=' + encodeURIComponent('Delivery accepted: one product person') + '&body=' + encodeURIComponent(body);
+    document.getElementById('stamp-date').textContent = dateStr(signedAt);
+    noteEl.classList.remove('signed'); void noteEl.offsetWidth; noteEl.classList.add('signed');
+    document.getElementById('delivered').hidden = false;
+    var a = document.createElement('a'); a.href = href; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  function wrap(ctx, text, maxW) {
+    var words = text.split(' '), lines = [], line = '';
+    words.forEach(function (w) { var t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; });
+    if (line) lines.push(line);
+    return lines;
+  }
+  function exportNote() {
+    var W = 1000, H = 1300, c = document.createElement('canvas'); c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    var bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#13233a'); bg.addColorStop(1, '#0B1220');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(62,230,208,0.6)'; g.lineWidth = 2; g.strokeRect(36, 36, W - 72, H - 72);
+    var x = 84, y = 120;
+    g.fillStyle = '#3EE6D0'; g.font = '500 22px Inter, sans-serif'; g.fillText('ECMR', x, y);
+    g.fillStyle = '#AEB9C9'; g.textAlign = 'right'; g.fillText('No. 6,866', W - x, y); g.textAlign = 'left';
+    y += 62; g.fillStyle = '#E8ECF1'; g.font = '600 56px "Space Grotesk", sans-serif'; g.fillText('Consignment note', x, y);
+    y += 34; g.fillStyle = 'rgba(62,230,208,0.45)'; g.fillRect(x, y, W - 2 * x, 2);
+    var rows = [['Sender', 'Mattias Malk, Tallinn'],
+      ['Goods', 'One Product Owner, Product Analyst or Business Analyst. Available now. Estonian and English.'],
+      ['Delivery terms', 'Tallinn hybrid or fully remote.'],
+      ['Consignee', nameEl.value.trim() || '(not given)']];
+    y += 58;
+    rows.forEach(function (r) {
+      g.fillStyle = '#AEB9C9'; g.font = '500 20px Inter, sans-serif'; g.fillText(r[0].toUpperCase(), x, y);
+      g.fillStyle = '#E8ECF1'; g.font = '400 28px Inter, sans-serif';
+      var lines = wrap(g, r[1], W - 2 * x - 240);
+      lines.forEach(function (l, i) { g.fillText(l, x + 240, y + i * 40); });
+      y += Math.max(1, lines.length) * 40 + 30;
+      g.fillStyle = 'rgba(232,236,241,0.12)'; g.fillRect(x, y - 30, W - 2 * x, 1);
+    });
+    y += 20;
+    g.fillStyle = '#AEB9C9'; g.font = '500 20px Inter, sans-serif'; g.fillText('SIGNATURE', x, y);
+    y += 20;
+    var sh = 300, sw = W - 2 * x, sigTop = y;
+    g.fillStyle = 'rgba(232,236,241,0.05)'; g.fillRect(x, y, sw, sh);
+    g.save(); g.translate(x, y);
+    var r = pad.getBoundingClientRect(), ar = r.width && r.height ? r.width / r.height : 4;
+    var dw = Math.min(sw, sh * ar), dh = dw / ar;
+    g.translate((sw - dw) / 2, (sh - dh) / 2);
+    drawStrokes(g, dw, dh, '#E8ECF1', 4);
+    g.restore();
+    g.fillStyle = 'rgba(232,236,241,0.3)'; g.fillRect(x + 20, y + sh - 50, sw - 40, 1);
+    y += sh + 60;
+    g.fillStyle = '#AEB9C9'; g.font = '400 22px Inter, sans-serif';
+    g.fillText(signedAt ? 'Signed ' + dateStr(signedAt) : 'Not yet signed', x, y);
+    g.fillText('mattias.malk@gmail.com', x, y + 36);
+    if (signedAt) {
+      g.save(); g.translate(x + sw - 170, sigTop + sh - 80); g.rotate(-0.16);
+      g.strokeStyle = '#3EE6D0'; g.lineWidth = 5; g.strokeRect(-130, -55, 260, 110);
+      g.fillStyle = '#3EE6D0'; g.textAlign = 'center'; g.font = '700 54px "Space Grotesk", sans-serif'; g.fillText('SIGNED', 0, 12);
+      g.font = '500 18px Inter, sans-serif'; g.fillText(dateStr(signedAt), 0, 40);
+      g.restore();
+    }
+    c.toBlob(function (b) {
+      if (!b) return;
+      var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'consignment-note-mattias-malk.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+    }, 'image/png');
+  }
+  document.getElementById('download-note').addEventListener('click', function () {
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(exportNote);
+  });
+  if ('IntersectionObserver' in window) {
+    var no = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { noteEl.classList.add('arrive'); no.disconnect(); } }); }, { threshold: 0.15 });
+    no.observe(noteEl);
+  }
+
+  // ---------- Navigation ----------
+  function scrollToY(y) { window.scrollTo({ top: y, behavior: R.reduced ? 'auto' : 'smooth' }); }
+  [].slice.call(document.querySelectorAll('[data-jump]')).forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var j = a.dataset.jump, target, focusEl;
+      if (j === 'end') { target = R.maxScroll; focusEl = document.getElementById('h-delivery'); }
+      else { target = tops[+j]; focusEl = secs[+j].querySelector('h2,h1'); }
+      scrollToY(target);
+      if (focusEl) setTimeout(function () { focusEl.focus({ preventScroll: true }); }, R.reduced ? 0 : 700);
+    });
+  });
+  var pauseBtn = document.getElementById('pause-btn');
+  pauseBtn.addEventListener('click', function () {
+    R.paused = !R.paused;
+    pauseBtn.setAttribute('aria-pressed', String(R.paused));
+    pauseBtn.textContent = R.paused ? 'Resume motion' : 'Pause motion';
+    R.emit('pause', R.paused);
+  });
+  addEventListener('keydown', function (e) {
+    var t = e.target, typing = t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
+    if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'PageDown' || e.key === 'PageUp') {
+      e.preventDefault();
+      var y = scrollY, target;
+      if (e.key === 'PageDown') {
+        target = R.maxScroll;
+        for (var i = 0; i < tops.length; i++) if (tops[i] > y + 8) { target = tops[i]; break; }
+      } else {
+        target = 0;
+        for (var j = tops.length - 1; j >= 0; j--) if (tops[j] < y - 8) { target = tops[j]; break; }
+      }
+      scrollToY(target);
+    } else if (e.key === 's' || e.key === 'S') {
+      if (doc.classList.contains('no-webgl')) return;
+      R.spec = !R.spec; doc.classList.toggle('spec', R.spec); R.emit('spec', R.spec);
+    }
+  });
+
+  // ---------- Look around: drag + parallax ----------
+  R.view = { yaw: 0, pitch: 0 };
+  var drag = null, yawT = 0, parX = 0, parY = 0;
+  var skipSel = 'a,button,input,textarea,select,label,canvas#sigpad,.panel,.delivery,.hud-btn';
+  addEventListener('pointerdown', function (e) {
+    if (e.button > 0 || (e.target.closest && e.target.closest(skipSel))) return;
+    drag = { x: e.clientX, y: e.clientY, id: e.pointerId, type: e.pointerType, base: yawT, active: e.pointerType === 'mouse' };
+  }, { passive: true });
+  addEventListener('pointermove', function (e) {
+    if (e.pointerType === 'mouse' && !R.isPhone) { parX = -(e.clientX / innerWidth * 2 - 1) * 0.052; parY = -(e.clientY / innerHeight * 2 - 1) * 0.035; }
+    if (!drag || e.pointerId !== drag.id) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.active) {
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.3) drag.active = true;
+      else if (Math.abs(dy) > 10) { drag = null; return; }
+      else return;
+    }
+    yawT = clamp(drag.base + dx / innerWidth * 1.3, -0.52, 0.52);
+  }, { passive: true });
+  function endDrag(e) { if (drag && (!e || e.pointerId === drag.id)) { drag = null; yawT = 0; } }
+  addEventListener('pointerup', endDrag, { passive: true });
+  addEventListener('pointercancel', endDrag, { passive: true });
+  document.addEventListener('pointerleave', function () { parX = parY = 0; });
+
+  // ---------- Main loop ----------
+  R.C = 0; R.Ct = 0; R.u = 0;
+  var REP = [0.0, 0.42, 0.55, 0.7, 0.96, 0.99, 0.55, 0.99];
+  var raf = 0, last = 0;
+  function tick(now) {
+    raf = requestAnimationFrame(tick);
+    var dt = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now;
+    R.Ct = cFromScroll(scrollY);
+    var target = R.Ct;
+    if (R.reduced) { var i = Math.min(7, Math.floor(R.Ct)); target = i + REP[i]; }
+    if (R.motionOff()) R.C = target;
+    else R.C += (target - R.C) * (1 - Math.exp(-dt * 4.2));
+    if (Math.abs(target - R.C) < 1e-4) R.C = target;
+    R.u = R.uFromC(R.C);
+    if (!R.motionOff()) R.time += dt;
+    var k = R.motionOff() ? 1 : 1 - Math.exp(-dt * (drag ? 14 : 3.2));
+    R.view.yaw += (yawT + (R.motionOff() ? 0 : parX) - R.view.yaw) * k;
+    R.view.pitch += ((R.motionOff() ? 0 : parY) - R.view.pitch) * k;
+    updateOdo(R.totalKm * clamp(R.u / R.U.dock, 0, 1));
+    updateAccent(R.C);
+    updatePlanks(R.C);
+    updateGame(dt, R.Ct);
+    if (R.frame) R.frame(dt, R.time);
+  }
+  function start() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
+  function stop() { cancelAnimationFrame(raf); raf = 0; }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
+  R.ready = function () { doc.classList.add('ready'); };
+
+  function onResize() { measure(); sizePad(); }
+  addEventListener('resize', onResize);
+  if ('ResizeObserver' in window) new ResizeObserver(function () { measure(); }).observe(document.querySelector('main'));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(onResize);
+  document.getElementById('year').textContent = new Date().getFullYear();
+  measure(); sizePad(); renderCount();
+  R.C = R.Ct = cFromScroll(scrollY);
+  start();
+})();
+</script>
+
+<!-- ============ 3D scene ============ -->
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+const R = window.Route;
+function fail(e) {
+  if (e) console.warn('[route] 3D scene unavailable, showing the text version.', e && e.message ? e.message : e);
+  document.documentElement.classList.add('no-webgl');
+  R.frame = null;
+}
+function webglOK() {
+  try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); }
+  catch (e) { return false; }
+}
+if (!webglOK() || /[?&]nowebgl\b/.test(location.search)) fail(); else main().catch(fail);
+
+async function main() {
+  const THREE = await import('three');
+  let post = null;
+  if (!R.isPhone) {
+    try {
+      const m = await Promise.all([
+        import('three/addons/postprocessing/EffectComposer.js'),
+        import('three/addons/postprocessing/RenderPass.js'),
+        import('three/addons/postprocessing/UnrealBloomPass.js'),
+        import('three/addons/postprocessing/OutputPass.js')]);
+      post = { EffectComposer: m[0].EffectComposer, RenderPass: m[1].RenderPass, UnrealBloomPass: m[2].UnrealBloomPass, OutputPass: m[3].OutputPass };
+    } catch (e) { post = null; }
+  }
+
+  const V3 = THREE.Vector3, Col = THREE.Color;
+  const { clamp, sstep } = R;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  let seed = 11;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  const UP = new V3(0, 1, 0), NORTH = new V3(0, 0, -1);
+  const AMBER = new Col(0xF2B544), CYAN = new Col(0x3EE6D0), WHITE = new Col(0xffffff);
+  const isPhone = R.isPhone;
+  const U = R.U, GH = R.GAP_HALF;
+
+  // ---------- Renderer ----------
+  const canvas = document.getElementById('scene');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isPhone, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.NoToneMapping;
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x1a2236, 0.006);
+  const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 6000);
+
+  // ---------- Geography to world ----------
+  const K = 2, LON0 = 25.75, LAT0 = 58.6, COSL = Math.cos(58.6 * Math.PI / 180);
+  const geo2 = ([lon, lat]) => new THREE.Vector2((lon - LON0) * 111.32 * COSL * K, -(lat - LAT0) * 111.32 * K);
+  const out2 = R.outline.map(geo2);
+  const isl2 = R.islands.map(pts => pts.map(geo2));
+  const cen = out2.reduce((a, p) => a.add(p), new THREE.Vector2()).multiplyScalar(1 / out2.length);
+  const routePts = out2.slice(0, R.routeCount).map(p => { const q = p.clone().sub(cen).multiplyScalar(0.9).add(cen); return new V3(q.x, 0, q.y); });
+  const curve = new THREE.CatmullRomCurve3(routePts, false, 'centripetal');
+  const L = curve.getLength();
+  R.buildKF(L);
+  const NS = 4000, sp = curve.getSpacedPoints(NS);
+  const PX = new Float32Array(NS + 1), PZ = new Float32Array(NS + 1), TX = new Float32Array(NS + 1), TZ = new Float32Array(NS + 1);
+  for (let i = 0; i <= NS; i++) { PX[i] = sp[i].x; PZ[i] = sp[i].z; }
+  for (let i = 0; i <= NS; i++) {
+    const a = sp[Math.max(0, i - 2)], b = sp[Math.min(NS, i + 2)];
+    const dx = b.x - a.x, dz = b.z - a.z, n = Math.hypot(dx, dz) || 1;
+    TX[i] = dx / n; TZ[i] = dz / n;
+  }
+  function heightAt(u) { const d = Math.abs(u - U.gap) * L; return 3.5 * (1 - sstep(GH + 40, GH + 54, d)); }
+  const mkF = () => ({ p: new V3(), f: new V3(), r: new V3() });
+  function frameAt(u, o = mkF()) {
+    u = clamp(u, 0, 1);
+    const x = u * NS, i = Math.min(NS - 1, Math.floor(x)), a = x - i;
+    o.p.set(lerp(PX[i], PX[i + 1], a), heightAt(u), lerp(PZ[i], PZ[i + 1], a));
+    o.f.set(lerp(TX[i], TX[i + 1], a), 0, lerp(TZ[i], TZ[i + 1], a)).normalize();
+    o.r.set(-o.f.z, 0, o.f.x);
+    return o;
+  }
+  const F = mkF(), F2 = mkF();
+  function pointPIP(x, z) {
+    let ins = false;
+    for (let i = 0, j = out2.length - 1; i < out2.length; j = i++) {
+      const a = out2[i], b = out2[j];
+      if ((a.y > z) !== (b.y > z) && x < (b.x - a.x) * (z - a.y) / (b.y - a.y) + a.x) ins = !ins;
+    }
+    return ins;
+  }
+  let bbMinX = Infinity, bbMaxX = -Infinity, bbMinZ = Infinity, bbMaxZ = -Infinity;
+  out2.concat(...isl2).forEach(p => { bbMinX = Math.min(bbMinX, p.x); bbMaxX = Math.max(bbMaxX, p.x); bbMinZ = Math.min(bbMinZ, p.y); bbMaxZ = Math.max(bbMaxZ, p.y); });
+  const mapC = new V3((bbMinX + bbMaxX) / 2, 0, (bbMinZ + bbMaxZ) / 2);
+
+  // ---------- Helpers ----------
+  const labelLayer = document.getElementById('labels');
+  const labels = [];
+  function addLabel(text, pos, show, cls, off) {
+    const el = document.createElement('div'); el.className = 'lbl' + (cls ? ' ' + cls : ''); el.textContent = text; labelLayer.appendChild(el);
+    labels.push({ el, pos, show, off: off || [0, -8], on: false });
+  }
+  const fogU = () => THREE.UniformsUtils.clone(THREE.UniformsLib.fog);
+  const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, flatShading: true, roughness: 0.82, metalness: 0.05 }, o || {}));
+  function box(w, h, d, m, x = 0, y = 0, z = 0, parent) {
+    const me = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); me.position.set(x, y, z); if (parent) parent.add(me); return me;
+  }
+  function canvasTex(w, h, draw) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  }
+  function shadedBox(w, h, d, x, y, z, tint = 1) {
+    const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z);
+    const n = g.attributes.normal, c = new Float32Array(n.count * 3);
+    for (let i = 0; i < n.count; i++) {
+      const ny = n.getY(i), nx = n.getX(i);
+      const s = (ny > 0.5 ? 1.0 : ny < -0.5 ? 0.3 : Math.abs(nx) > 0.5 ? 0.74 : 0.58) * tint;
+      c[i * 3] = c[i * 3 + 1] = c[i * 3 + 2] = s;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+    return g;
+  }
+  function mergeGeoms(list) {
+    // Merge indexed geometries with identical attribute sets.
+    let vcount = 0, icount = 0;
+    list.forEach(g => { vcount += g.attributes.position.count; icount += g.index.count; });
+    const out = new THREE.BufferGeometry();
+    const names = Object.keys(list[0].attributes);
+    names.forEach(nm => { const it = list[0].attributes[nm].itemSize; out.setAttribute(nm, new THREE.BufferAttribute(new Float32Array(vcount * it), it)); });
+    const idx = new Uint32Array(icount);
+    let vo = 0, io = 0;
+    list.forEach(g => {
+      names.forEach(nm => out.attributes[nm].array.set(g.attributes[nm].array, vo * g.attributes[nm].itemSize));
+      for (let i = 0; i < g.index.count; i++) idx[io + i] = g.index.array[i] + vo;
+      vo += g.attributes.position.count; io += g.index.count;
+    });
+    out.setIndex(new THREE.BufferAttribute(idx, 1));
+    return out;
+  }
+  const glowTex = canvasTex(64, 64, (g) => {
+    const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.22, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  });
+  const glowSprite = (color, scale, opacity = 1) => {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }));
+    s.material.userData.specHide = true; s.scale.setScalar(scale); return s;
+  };
+  const glowPointsMat = (atten = true) => new THREE.ShaderMaterial({
+    uniforms: { uPx: { value: renderer.getPixelRatio() }, uOpacity: { value: 1 }, uAtten: { value: atten ? 1 : 0 } },
+    vertexShader: `
+      attribute float aSize; attribute vec4 aColor; varying vec4 vColor;
+      uniform float uPx, uAtten;
+      void main(){ vColor = aColor; vec4 mv = modelViewMatrix * vec4(position,1.0); gl_Position = projectionMatrix * mv;
+        gl_PointSize = aSize * uPx * (uAtten > 0.5 ? 320.0 / max(-mv.z, 0.5) : 1.0); }`,
+    fragmentShader: `
+      varying vec4 vColor; uniform float uOpacity;
+      void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c) * 2.0; float a = 1.0 - smoothstep(0.0, 1.0, d); a *= a;
+        if (a * vColor.a * uOpacity < 0.003) discard;
+        gl_FragColor = vec4(vColor.rgb, a * vColor.a * uOpacity);
+        #include <colorspace_fragment>
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  function makePoints(n, atten = true) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+    g.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(n), 1));
+    g.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(n * 4), 4));
+    const p = new THREE.Points(g, glowPointsMat(atten)); p.frustumCulled = false; p.material.userData.specHide = true;
+    return p;
+  }
+
+  // ---------- Time of day ----------
+  const TK = [0, 1.5, 3, 4.5, 5.5, 6.3, 7.1, 8];
+  const hexes = a => a.map(h => new Col(h));
+  const TOD = {
+    top: hexes(['#161d3f', '#0e1531', '#080d1c', '#060a15', '#04070f', '#081328', '#1a3157', '#29507f']),
+    mid: hexes(['#46365c', '#231f3e', '#0e1527', '#0b1220', '#081020', '#132a46', '#4b6b94', '#7693b9']),
+    hor: hexes(['#e58c4b', '#8a4b3c', '#1d2639', '#14203a', '#0f1d2e', '#244a5e', '#dc9a78', '#f2b98c']),
+    ground: hexes(['#1d2030', '#161b2a', '#0f1522', '#0d1320', '#0b111c', '#0f1a27', '#1b2938', '#253645']),
+    sea: hexes(['#141a2c', '#0f1424', '#0a0f1c', '#080d18', '#070b15', '#0b1626', '#22324a', '#2c4060'])
+  };
+  const TS = { amb: [0.9, 0.66, 0.48, 0.44, 0.42, 0.5, 0.74, 0.95], fog: [0.0048, 0.0058, 0.0066, 0.006, 0.0056, 0.0048, 0.004, 0.0034],
+    stars: [0.15, 0.55, 0.95, 1, 1, 0.75, 0.2, 0], sun: [1, 0.4, 0.05, 0, 0, 0.2, 0.8, 1], head: [0.85, 1, 1, 1, 1, 1, 0.75, 0.45] };
+  function segOf(C) { let i = 0; while (i < TK.length - 2 && C > TK[i + 1]) i++; return [i, clamp((C - TK[i]) / (TK[i + 1] - TK[i]), 0, 1)]; }
+  const tod = { top: new Col(), mid: new Col(), hor: new Col(), ground: new Col(), sea: new Col(), amb: 1, fog: 0.005, stars: 0, sun: 1, head: 1 };
+  function updateTOD(C) {
+    const [i, t] = segOf(C);
+    for (const k of ['top', 'mid', 'hor', 'ground', 'sea']) tod[k].copy(TOD[k][i]).lerp(TOD[k][i + 1], t);
+    for (const k of ['amb', 'fog', 'stars', 'sun', 'head']) tod[k] = lerp(TS[k][i], TS[k][i + 1], t);
+  }
+
+  // ---------- Sky ----------
+  frameAt(0.0, F);
+  const duskDir = new V3().addScaledVector(F.f, 0.75).addScaledVector(F.r, -0.65).setY(0.07).normalize();
+  frameAt(U.dock, F);
+  const dawnDir = new V3().addScaledVector(F.f, 0.9).addScaledVector(F.r, 0.25).setY(0.06).normalize();
+  const sunDir = new V3();
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(4500, 32, 16), new THREE.ShaderMaterial({
+    uniforms: { uTop: { value: new Col() }, uMid: { value: new Col() }, uHor: { value: new Col() }, uSunDir: { value: sunDir }, uSun: { value: 1 } },
+    vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `
+      uniform vec3 uTop, uMid, uHor, uSunDir; uniform float uSun; varying vec3 vDir;
+      void main(){ vec3 d = normalize(vDir); float h = d.y;
+        vec3 col = mix(uHor, uMid, smoothstep(-0.02, 0.22, h)); col = mix(col, uTop, smoothstep(0.18, 0.75, h));
+        if (h < 0.0) col = mix(uHor, uMid * 0.6, smoothstep(0.0, -0.2, h));
+        float s = max(dot(d, normalize(uSunDir)), 0.0);
+        col += uHor * (pow(s, 6.0) * 0.45 + pow(s, 60.0) * 0.5) * uSun;
+        gl_FragColor = vec4(col, 1.0);
+        #include <colorspace_fragment>
+      }`,
+    side: THREE.BackSide, depthWrite: false, fog: false
+  }));
+  sky.renderOrder = -10; sky.frustumCulled = false; sky.material.userData.noSpec = true; scene.add(sky);
+
+  const starGeo = new THREE.BufferGeometry(); {
+    const n = isPhone ? 700 : 1400, a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const th = rnd() * Math.PI * 2, y = 0.06 + Math.pow(rnd(), 0.8) * 0.94, r = Math.sqrt(1 - y * y);
+      a[i * 3] = Math.cos(th) * r * 4200; a[i * 3 + 1] = y * 4200; a[i * 3 + 2] = Math.sin(th) * r * 4200;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(a, 3));
+  }
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xdfe8ff, size: isPhone ? 1.6 : 1.8, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false }));
+  stars.frustumCulled = false; stars.material.userData.noSpec = true; scene.add(stars);
+
+  // Aurora ribbons, placed in the sky ahead of the signal chapter
+  frameAt(U.mast, F);
+  const auroraAz = Math.atan2(F.f.x - F.r.x * 0.5, F.f.z - F.r.z * 0.5);
+  const aurora = new THREE.Group(); scene.add(aurora);
+  const auroraMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 }, uC1: { value: new Col(0x4fe3a8) }, uC2: { value: new Col(0x3a8fe0) } },
+    vertexShader: `uniform float uTime; varying vec2 vUv; void main(){ vUv = uv; vec3 p = position;
+      p.y += sin(uv.x * 9.0 + uTime * 0.12) * 45.0 + sin(uv.x * 23.0 - uTime * 0.08) * 18.0;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(p,1.0); }`,
+    fragmentShader: `uniform float uTime, uOpacity; uniform vec3 uC1, uC2; varying vec2 vUv;
+      void main(){ float x = vUv.x, y = vUv.y;
+        float c = 0.55 + 0.45 * sin(x * 40.0 + uTime * 0.2 + sin(x * 12.0 - uTime * 0.1) * 2.0);
+        c *= 0.65 + 0.35 * sin(x * 97.0 - uTime * 0.3);
+        float band = smoothstep(0.0, 0.1, y) * pow(1.0 - y, 1.7);
+        float edge = smoothstep(0.0, 0.18, x) * smoothstep(1.0, 0.82, x);
+        gl_FragColor = vec4(mix(uC1, uC2, y * 0.9), c * band * edge * uOpacity);
+        #include <colorspace_fragment>
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false
+  });
+  auroraMat.userData.noSpec = true;
+  [[1700, 0, 1.0], [1900, 0.35, 0.7]].forEach(([rad, off, sc]) => {
+    const g = new THREE.PlaneGeometry(1, 1, 120, 1), p = g.attributes.position, uv = g.attributes.uv;
+    for (let i = 0; i < p.count; i++) {
+      const th = auroraAz + off + (uv.getX(i) - 0.5) * 2.3;
+      p.setXYZ(i, Math.sin(th) * rad, lerp(230, 230 + 520 * sc, uv.getY(i)), Math.cos(th) * rad);
+    }
+    const m = new THREE.Mesh(g, auroraMat); m.frustumCulled = false; aurora.add(m);
+  });
+
+  // ---------- Lights ----------
+  const hemi = new THREE.HemisphereLight(0x8090b0, 0x202020, 0.8); scene.add(hemi);
+  const sunL = new THREE.DirectionalLight(0xffc89a, 1.0); scene.add(sunL); scene.add(sunL.target);
+  const fill = new THREE.DirectionalLight(0xa9c4ff, 0.7); scene.add(fill); scene.add(fill.target);
+
+  // ---------- Ground, sea, coast ----------
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(14000, 14000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x0a0f1c }));
+  sea.position.y = -0.6; scene.add(sea);
+  const shapes = [out2, ...isl2].map(pts => new THREE.Shape(pts.map(p => new THREE.Vector2(p.x, -p.y))));
+  const landGeo = new THREE.ShapeGeometry(shapes, 1).rotateX(-Math.PI / 2);
+  const headU = () => ({ uTruckPos: { value: new V3() }, uTruckDir: { value: new V3(0, 0, 1) }, uHead: { value: new Col(0xffd49a) }, uHeadAmt: { value: 1 }, uSpec: { value: 0 } });
+  const landMat = new THREE.ShaderMaterial({
+    uniforms: Object.assign(fogU(), headU(), { uGround: { value: new Col() }, uGrid: { value: CYAN.clone() }, uGridAmt: { value: 0.07 } }),
+    vertexShader: `varying vec3 vW;
+      #include <fog_pars_vertex>
+      void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+      }`,
+    fragmentShader: `uniform vec3 uGround, uGrid, uTruckPos, uTruckDir, uHead; uniform float uGridAmt, uHeadAmt, uSpec; varying vec3 vW;
+      #include <fog_pars_fragment>
+      float grid(vec2 p, float s){ vec2 q = p / s; vec2 fw = fwidth(q); vec2 g = abs(fract(q - 0.5) - 0.5) / fw;
+        float l = 1.0 - min(min(g.x, g.y), 1.0); return l * (1.0 - smoothstep(0.12, 0.5, max(fw.x, fw.y))); }
+      void main(){
+        vec3 col = uGround;
+        col += uGrid * (grid(vW.xz, 8.0) * 0.5 + grid(vW.xz, 40.0)) * uGridAmt;
+        vec2 tp = vW.xz - uTruckPos.xz; float d = length(tp);
+        float cone = smoothstep(0.55, 0.92, dot(tp / max(d, 0.001), normalize(uTruckDir.xz)));
+        float pool = cone * (1.0 - smoothstep(3.0, 36.0, d)) * smoothstep(1.0, 3.5, d);
+        col += uHead * (pool * 0.3 + (1.0 - smoothstep(0.0, 5.0, d)) * 0.04) * uHeadAmt;
+        if (uSpec > 0.5) col = uGrid * 0.4;
+        gl_FragColor = vec4(col, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        #include <fog_fragment>
+      }`,
+    fog: true, extensions: { derivatives: true }
+  });
+  const land = new THREE.Mesh(landGeo, landMat); scene.add(land);
+  const coast = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(out2.map(p => new V3(p.x, 0.12, p.y))),
+    new THREE.LineBasicMaterial({ color: 0x6a7c99, transparent: true, opacity: 0.45 }));
+  scene.add(coast);
+  isl2.forEach(pts => scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts.map(p => new V3(p.x, 0.12, p.y))), coast.material)));
+
+  // ---------- Road ----------
+  function ribbonGeo(u0, u1, n, width, yOff) {
+    const pos = [], aU = [], aSide = [], idx = [];
+    for (let i = 0; i <= n; i++) {
+      const u = lerp(u0, u1, i / n); frameAt(u, F);
+      for (const s of [-1, 1]) { pos.push(F.p.x + F.r.x * s * width / 2, F.p.y + yOff, F.p.z + F.r.z * s * width / 2); aU.push(u); aSide.push(s); }
+      if (i < n) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('aU', new THREE.Float32BufferAttribute(aU, 1));
+    g.setAttribute('aSide', new THREE.Float32BufferAttribute(aSide, 1));
+    g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  }
+  const roadMat = new THREE.ShaderMaterial({
+    uniforms: Object.assign(fogU(), headU(), {
+      uL: { value: L }, uPaveA: { value: U.pave0 }, uPaveB: { value: U.pave1 }, uFront: { value: 0 }, uSeg: { value: 4 },
+      uGapA: { value: U.gap - GH / L }, uGapB: { value: U.gap + GH / L }, uAsph: { value: new Col(0x1c2433) }, uAmb: { value: 1 },
+      uAmber: { value: AMBER.clone() }, uCyan: { value: CYAN.clone() }
+    }),
+    vertexShader: `attribute float aU; attribute float aSide; varying float vU; varying float vSide; varying vec3 vW;
+      #include <fog_pars_vertex>
+      void main(){ vU = aU; vSide = aSide; vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+      }`,
+    fragmentShader: `uniform float uL, uPaveA, uPaveB, uFront, uSeg, uGapA, uGapB, uAmb, uHeadAmt, uSpec;
+      uniform vec3 uAsph, uAmber, uCyan, uTruckPos, uTruckDir, uHead;
+      varying float vU; varying float vSide; varying vec3 vW;
+      #include <fog_pars_fragment>
+      void main(){
+        if (vU > uGapA && vU < uGapB) discard;
+        float paved = 1.0;
+        if (vU > uPaveA && vU < uPaveB) {
+          float segStart = floor(vU * uL / uSeg) * uSeg / uL;
+          if (segStart > uFront) discard;
+          paved = smoothstep(0.0, uSeg * 2.5 / uL, uFront - segStart);
+        }
+        float d = vU * uL; float as = abs(vSide);
+        vec3 col = uAsph * (0.55 + 0.6 * uAmb);
+        vec2 tp = vW.xz - uTruckPos.xz; float dist = length(tp);
+        float cone = smoothstep(0.55, 0.92, dot(tp / max(dist, 0.001), normalize(uTruckDir.xz)));
+        float pool = cone * (1.0 - smoothstep(3.0, 40.0, dist)) * smoothstep(1.0, 3.0, dist) * uHeadAmt;
+        col += uHead * pool * 0.4;
+        float edge = smoothstep(0.84, 0.88, as) * (1.0 - smoothstep(0.93, 0.97, as));
+        col += vec3(0.62, 0.66, 0.72) * edge * (0.22 + pool * 0.8);
+        vec3 accent = mix(uAmber, uCyan, smoothstep(0.1, 0.55, vU));
+        float dash = step(0.55, fract(d / 6.0)) * (1.0 - smoothstep(0.025, 0.045, as));
+        col += accent * dash * (0.4 + pool * 0.7);
+        col = mix(col + uCyan * 0.35, col, paved);
+        if (uSpec > 0.5) col = uCyan * 0.55;
+        gl_FragColor = vec4(col, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        #include <fog_fragment>
+      }`,
+    fog: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4
+  });
+  const road = new THREE.Mesh(ribbonGeo(0, 1, NS, 6, 0.06), roadMat); road.frustumCulled = false; scene.add(road);
+
+  // Ramp walls where the road climbs to the bridge islands
+  {
+    const wallMat = M(0x2a2620);
+    [[U.gap - (GH + 54) / L, U.gap - (GH + 39) / L], [U.gap + (GH + 39) / L, U.gap + (GH + 54) / L]].forEach(([a, b]) => {
+      for (const s of [-1, 1]) {
+        const pos = [], idx = []; const n = 24;
+        for (let i = 0; i <= n; i++) {
+          const u = lerp(a, b, i / n); frameAt(u, F);
+          const x = F.p.x + F.r.x * s * 3.05, z = F.p.z + F.r.z * s * 3.05;
+          pos.push(x, F.p.y + 0.06, z, x, -0.05, z);
+          if (i < n) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+        }
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+        const m = new THREE.Mesh(g, wallMat); m.material.side = THREE.DoubleSide; scene.add(m);
+      }
+    });
+  }
+
+  // Wireframe preview of the unpaved road (chapter 4)
+  const wire = (() => {
+    const pos = [], au = [];
+    const n = Math.ceil((U.pave1 - U.pave0) * L);
+    const lp = (u, s) => { frameAt(u, F); return [F.p.x + F.r.x * s * 3, F.p.y + 0.08, F.p.z + F.r.z * s * 3]; };
+    for (let i = 0; i < n; i++) {
+      const u0 = U.pave0 + i / L, u1 = U.pave0 + (i + 1) / L;
+      for (const s of [-1, 1]) { pos.push(...lp(u0, s), ...lp(u1, s)); au.push(u0, u1); }
+      if (i % 4 === 0) { pos.push(...lp(u0, -1), ...lp(u0, 1)); au.push(u0, u0); pos.push(...lp(u0, -1), ...lp(u0 + 4 / L, 1)); au.push(u0, u0 + 4 / L); }
+      if (i % 6 < 3) { pos.push(...lp(u0, 0), ...lp(u1, 0)); au.push(u0, u1); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('aU', new THREE.Float32BufferAttribute(au, 1));
+    const m = new THREE.ShaderMaterial({
+      uniforms: Object.assign(fogU(), { uFront: { value: 0 }, uB: { value: U.pave1 }, uL: { value: L }, uCol: { value: CYAN.clone() } }),
+      vertexShader: `attribute float aU; varying float vU;
+        #include <fog_pars_vertex>
+        void main(){ vU = aU; vec4 mvPosition = modelViewMatrix * vec4(position,1.0); gl_Position = projectionMatrix * mvPosition;
+          #include <fog_vertex>
+        }`,
+      fragmentShader: `uniform float uFront, uB, uL; uniform vec3 uCol; varying float vU;
+        #include <fog_pars_fragment>
+        void main(){ if (vU < uFront || vU > uB) discard;
+          float a = 0.6 * (1.0 - smoothstep(0.0, 170.0 / uL, vU - uFront)) + 0.1;
+          gl_FragColor = vec4(uCol, a);
+          #include <colorspace_fragment>
+          #include <fog_fragment>
+        }`,
+      transparent: true, depthWrite: false, fog: true
+    });
+    const ls = new THREE.LineSegments(g, m); ls.frustumCulled = false; scene.add(ls); return ls;
+  })();
+
+  // ---------- Scenery: trees and distance posts ----------
+  function nearScene(u, lat) {
+    const d = (a, w) => Math.abs(u - a) * L < w;
+    if (d(U.check, 70) && Math.abs(lat) < 22) return true;
+    if (d(U.gap, 80) && Math.abs(lat) < 45) return true;
+    if (d(U.tablet, 30) && Math.abs(lat) < 14) return true;
+    if (d(U.mast, 80) && lat < 45 && lat > -70) return true;
+    if (u > 0.975 && Math.abs(lat) < 30) return true;
+    if (u < 0.006) return true;
+    return false;
+  }
+  {
+    const n = isPhone ? 380 : 950;
+    const g = new THREE.ConeGeometry(1, 1, 5).translate(0, 0.5, 0);
+    const trees = new THREE.InstancedMesh(g, M(0x1f3a3c, { roughness: 0.95 }), n);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new V3(), p = new V3(), c = new Col();
+    let k = 0, guard = 0;
+    while (k < n && guard++ < n * 20) {
+      const u = rnd(), side = rnd() < 0.5 ? -1 : 1, lat = side * (8 + Math.pow(rnd(), 1.7) * 75);
+      if (nearScene(u, lat)) continue;
+      frameAt(u, F); p.copy(F.p).addScaledVector(F.r, lat); p.y = 0;
+      if (!pointPIP(p.x, p.z)) continue;
+      const h = 2.2 + rnd() * 3.2, r = 0.7 + rnd() * 0.6;
+      q.setFromAxisAngle(UP, rnd() * 6.28); s.set(r, h, r);
+      trees.setMatrixAt(k, m4.compose(p, q, s));
+      trees.setColorAt(k, c.setHSL(0.47 + rnd() * 0.06, 0.25, 0.32 + rnd() * 0.12));
+      k++;
+    }
+    trees.count = k; scene.add(trees);
+
+    const posts = Math.floor(L / 12);
+    const bodies = new THREE.InstancedMesh(new THREE.BoxGeometry(0.12, 1.1, 0.12).translate(0, 0.55, 0), M(0x3a4352), posts);
+    const caps = new THREE.InstancedMesh(new THREE.BoxGeometry(0.15, 0.2, 0.15).translate(0, 1.18, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), posts);
+    let j = 0;
+    for (let i = 0; i < posts; i++) {
+      const u = (i + 0.5) / posts, lat = (i % 2 ? 1 : -1) * 4.3;
+      if (nearScene(u, lat) || (u > U.pave0 - 0.004 && u < U.pave1 + 0.004)) continue;
+      frameAt(u, F); p.copy(F.p).addScaledVector(F.r, lat); p.y = F.p.y;
+      m4.compose(p, q.identity(), s.set(1, 1, 1));
+      bodies.setMatrixAt(j, m4); caps.setMatrixAt(j, m4);
+      caps.setColorAt(j, c.copy(AMBER).lerp(CYAN, sstep(0.1, 0.55, u)).multiplyScalar(0.9));
+      j++;
+    }
+    bodies.count = caps.count = j; scene.add(bodies, caps);
+  }
+
+  // ---------- Truck ----------
+  const truck = new THREE.Group(); scene.add(truck);
+  const T = {};
+  {
+    const cab = M(0x3a4b66), boxM = M(0xc4ccd8), dark = M(0x161c27), glass = M(0x0b1320, { roughness: 0.25, metalness: 0.6, emissive: 0x0b1a2c });
+    T.stripe = M(0xF2B544, { emissive: 0xF2B544, emissiveIntensity: 0.3 });
+    box(2.0, 0.4, 5.0, dark, 0, 0.72, 0, truck);
+    box(2.1, 1.65, 1.55, cab, 0, 1.62, 1.78, truck);
+    box(2.0, 0.45, 0.95, cab, 0, 2.66, 1.45, truck);
+    box(1.86, 0.7, 0.05, glass, 0, 1.95, 2.56, truck);
+    for (const s of [-1, 1]) box(0.05, 0.55, 0.7, glass, s * 1.06, 2.0, 1.95, truck);
+    box(2.12, 0.3, 0.16, dark, 0, 0.86, 2.6, truck);
+    box(1.2, 0.42, 0.04, M(0x24324a), 0, 1.25, 2.57, truck);
+    box(2.3, 2.45, 3.5, boxM, 0, 2.05, -0.82, truck);
+    box(2.33, 0.14, 3.53, T.stripe, 0, 1.15, -0.82, truck);
+    const hl = M(0xffe6bb, { emissive: 0xffd59a, emissiveIntensity: 2.2 });
+    for (const s of [-1, 1]) box(0.42, 0.2, 0.05, hl, s * 0.68, 1.02, 2.6, truck);
+    T.tail = M(0x3a0606, { emissive: 0xff3b30, emissiveIntensity: 1 });
+    T.rev = M(0x222222, { emissive: 0xffffff, emissiveIntensity: 0 });
+    for (const s of [-1, 1]) { box(0.32, 0.2, 0.05, T.tail, s * 0.85, 1.05, -2.6, truck); box(0.18, 0.14, 0.05, T.rev, s * 0.5, 1.05, -2.6, truck); }
+    const wg = new THREE.CylinderGeometry(0.46, 0.46, 0.34, 10).rotateZ(Math.PI / 2);
+    T.wheels = [];
+    for (const z of [1.8, -1.2, -2.05]) for (const s of [-1, 1]) { const w = new THREE.Mesh(wg, dark); w.position.set(s * 1.02, 0.46, z); truck.add(w); T.wheels.push(w); }
+    // Roll-up back door
+    T.door = new THREE.Group(); T.door.position.set(0, 3.27, -2.6); truck.add(T.door);
+    const doorTex = canvasTex(64, 128, (g, w, h) => { g.fillStyle = '#aeb8c6'; g.fillRect(0, 0, w, h); g.fillStyle = '#8e99a8'; for (let y = 8; y < h; y += 12) g.fillRect(0, y, w, 2); });
+    box(2.16, 2.36, 0.05, M(0xffffff, { map: doorTex }), 0, -1.18, 0, T.door);
+    T.inside = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.2), new THREE.MeshBasicMaterial({ color: 0x3EE6D0, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    T.inside.position.set(0, 2.05, -2.585); truck.add(T.inside);
+    // Clipboard on the right-hand side (truck's right is local -x)
+    box(0.05, 1.45, 1.12, M(0x3d3128), -1.19, 2.05, -0.6, truck);
+    box(0.08, 0.14, 0.4, M(0x9aa4b2, { metalness: 0.6, roughness: 0.4 }), -1.22, 2.76, -0.6, truck);
+    // Headlights
+    T.spot = new THREE.SpotLight(0xffe0b0, 30, 80, 0.55, 0.6, 1.2);
+    T.spot.position.set(0, 1.1, 2.7); const tgt = new THREE.Object3D(); tgt.position.set(0, 0, 16); truck.add(T.spot, tgt); T.spot.target = tgt;
+    T.glows = [-1, 1].map(s => { const g = glowSprite(0xffd8a0, 1.8, 0.9); g.position.set(s * 0.68, 1.02, 2.8); truck.add(g); return g; });
+    T.marker = glowSprite(0x3EE6D0, 1, 0); T.marker.position.y = 3; truck.add(T.marker);
+  }
+
+  // ---------- Chapter 1: sheets that become planes ----------
+  const paperMat = M(0xf6cf7a, { side: THREE.DoubleSide, emissive: 0x4a3410, emissiveIntensity: 0.6, flatShading: false });
+  const sheetGeo = new THREE.PlaneGeometry(0.96, 1.26).translate(0, -0.63, 0);
+  const planeGeo = new THREE.BufferGeometry();
+  planeGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0.55, -0.44, 0.07, -0.4, 0, 0, -0.4, 0, 0, 0.55, 0, 0, -0.4, 0.44, 0.07, -0.4, 0, 0, 0.55, 0, 0, -0.4, 0, -0.17, -0.4], 3));
+  planeGeo.computeVertexNormals();
+  const sheets = [];
+  for (let i = 0; i < 12; i++) {
+    const pivot = new THREE.Group(); pivot.rotation.order = 'YXZ';
+    pivot.position.set(-1.23 - i * 0.004, 2.72, -0.6 + (rnd() - 0.5) * 0.08); pivot.rotation.y = -Math.PI / 2; pivot.rotation.z = (rnd() - 0.5) * 0.08;
+    const sheet = new THREE.Mesh(sheetGeo, paperMat), plane = new THREE.Mesh(planeGeo, paperMat);
+    plane.scale.setScalar(0.001); plane.position.y = -0.5; pivot.add(sheet, plane); truck.add(pivot);
+    sheets.push({ pivot, sheet, plane, free: false, tear: 1.0 + i * 0.13, axis: new V3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).normalize() });
+  }
+  const NP = isPhone ? 260 : 460;
+  const heroPts = makePoints(NP); scene.add(heroPts);
+  const hp = [];
+  for (let k = 0; k < NP; k++) hp.push({ plane: k % 12, a: rnd(), b: rnd(), c: rnd(), j: new V3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5) });
+  let heroStart = null;
+  const bez = (a, b, c, t, out) => out.copy(a).multiplyScalar((1 - t) * (1 - t)).addScaledVector(b, 2 * (1 - t) * t).addScaledVector(c, t * t);
+  const tmpV = new V3(), tmpV2 = new V3(), tmpQ = new THREE.Quaternion(), tmpM = new THREE.Matrix4();
+  const FLY = 2.6;
+  function updateHero(time, C) {
+    if (heroStart === null) return;
+    const h = R.reduced ? 99 : time - heroStart;
+    for (let i = 0; i < sheets.length; i++) {
+      const s = sheets[i];
+      if (h < s.tear && !s.free) {
+        const amp = sstep(0, 0.9, h) * (0.25 + 0.5 * sstep(0.5, s.tear, h));
+        s.pivot.rotation.x = -(Math.abs(Math.sin(h * 9 + i * 1.7)) * amp + 0.05 * amp);
+        continue;
+      }
+      if (!s.free) {
+        truck.updateMatrixWorld(); scene.attach(s.pivot); s.free = true;
+        frameAt(R.u, F);
+        s.S = s.pivot.position.clone(); s.q0 = s.pivot.quaternion.clone();
+        s.P1 = s.S.clone().addScaledVector(UP, 3.2).addScaledVector(F.r, 2.6).addScaledVector(F.f, 1.5);
+        frameAt(R.u + (9 + i * 2.6) / L, F2);
+        s.E = F2.p.clone().addScaledVector(UP, 3 + rnd() * 2.4).addScaledVector(F2.r, 1 + (rnd() - 0.5) * 6);
+        s.burst = bez(s.S, s.P1, s.E, 0.9, new V3());
+      }
+      const tau = (h - s.tear) / FLY;
+      if (tau >= 1) { s.pivot.visible = false; continue; }
+      const e = tau;
+      bez(s.S, s.P1, s.E, e, s.pivot.position);
+      const qT = tmpQ.copy(s.q0).multiply(new THREE.Quaternion().setFromAxisAngle(s.axis, tau * 7));
+      bez(s.S, s.P1, s.E, Math.min(1, e + 0.03), tmpV);
+      tmpM.lookAt(tmpV, s.pivot.position, UP);
+      const qL = new THREE.Quaternion().setFromRotationMatrix(tmpM);
+      const k = sstep(0.26, 0.46, tau);
+      s.pivot.quaternion.copy(qT).slerp(qL, k);
+      s.sheet.scale.setScalar(Math.max(0.001, 1 - k));
+      s.plane.scale.setScalar(Math.max(0.001, 1.9 * k * (1 - sstep(0.84, 1, tau))));
+    }
+    // Particle stream
+    const pos = heroPts.geometry.attributes.position, col = heroPts.geometry.attributes.aColor, siz = heroPts.geometry.attributes.aSize;
+    const fade = 1 - sstep(1.0, 1.7, C);
+    heroPts.visible = fade > 0.01;
+    if (!heroPts.visible) return;
+    for (let k = 0; k < NP; k++) {
+      const q = hp[k], s = sheets[q.plane];
+      const rel = h - (s.tear + 0.86 * FLY);
+      if (rel < 0 || !s.burst) { col.setW(k, 0); continue; }
+      const st = (q.a + time * 0.028) % 1;
+      frameAt((6 + st * 95) / L, F);
+      tmpV.copy(F.p).addScaledVector(F.r, (q.b - 0.5) * 4.5);
+      tmpV.y += 0.8 + q.c * 2.8 + Math.sin(time * 0.8 + q.a * 20) * 0.25;
+      const a = sstep(0, 1.8, rel);
+      tmpV2.copy(s.burst).addScaledVector(q.j, 1 + a * 3);
+      tmpV2.lerp(tmpV, a);
+      pos.setXYZ(k, tmpV2.x, tmpV2.y, tmpV2.z);
+      const al = (rel < 0.4 ? rel / 0.4 : 1) * lerp(1, Math.sin(Math.PI * st), a) * fade;
+      col.setXYZW(k, CYAN.r, CYAN.g, CYAN.b, al * 0.9);
+      siz.setX(k, 0.42 + q.c * 0.3);
+    }
+    pos.needsUpdate = col.needsUpdate = siz.needsUpdate = true;
+  }
+
+  // ---------- Chapter 2: paper storm ----------
+  const NSHEET = isPhone ? 4000 : 20000;
+  const stormGeo = new THREE.PlaneGeometry(0.3, 0.4, 2, 1);
+  { const p = stormGeo.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, Math.abs(p.getX(i)) < 0.01 ? 0.035 : -0.015); stormGeo.computeVertexNormals(); }
+  const aBase = new Float32Array(NSHEET * 3), aSeed = new Float32Array(NSHEET * 4);
+  for (let i = 0; i < NSHEET; i++) {
+    const u = lerp(U.storm0, U.storm1, rnd()); frameAt(u, F);
+    const lat = (rnd() < 0.5 ? -1 : 1) * (0.5 + Math.pow(rnd(), 1.5) * 24), h = 0.4 + Math.pow(rnd(), 1.25) * 11;
+    aBase[i * 3] = F.p.x + F.r.x * lat; aBase[i * 3 + 1] = h; aBase[i * 3 + 2] = F.p.z + F.r.z * lat;
+    aSeed[i * 4] = rnd(); aSeed[i * 4 + 1] = rnd(); aSeed[i * 4 + 2] = rnd(); aSeed[i * 4 + 3] = rnd();
+  }
+  stormGeo.setAttribute('aBase', new THREE.InstancedBufferAttribute(aBase, 3));
+  stormGeo.setAttribute('aSeed', new THREE.InstancedBufferAttribute(aSeed, 4));
+  frameAt(U.tablet, F);
+  const tabletPos = F.p.clone().addScaledVector(UP, 6.5);
+  frameAt(U.tablet - 26 / L, F2);
+  const streamA = F2.p.clone().addScaledVector(UP, 5.2);
+  const stormMat = new THREE.ShaderMaterial({
+    uniforms: Object.assign(fogU(), headU(), { uTime: { value: 0 }, uPull: { value: 0 }, uStreamA: { value: streamA }, uTablet: { value: tabletPos },
+      uPaper: { value: new Col(0xf4d38a) }, uCyan: { value: CYAN.clone() }, uAmb3: { value: new Col(0.3, 0.3, 0.3) }, uCam: { value: new V3() } }),
+    vertexShader: `attribute vec3 aBase; attribute vec4 aSeed;
+      uniform float uTime, uPull, uHeadAmt; uniform vec3 uStreamA, uTablet, uTruckPos, uTruckDir, uPaper, uCyan, uAmb3, uHead, uCam;
+      varying vec3 vCol;
+      #include <fog_pars_vertex>
+      mat3 rotXYZ(vec3 a){ float cx=cos(a.x), sx=sin(a.x), cy=cos(a.y), sy=sin(a.y), cz=cos(a.z), sz=sin(a.z);
+        return mat3(cy*cz, cy*sz, -sy, sx*sy*cz - cx*sz, sx*sy*sz + cx*cz, sx*cy, cx*sy*cz + sx*sz, cx*sy*sz - sx*cz, cx*cy); }
+      void main(){
+        vec4 s = aSeed; float t = uTime;
+        vec3 drift = vec3(sin(t*(0.5+s.x)+s.y*6.283)*2.3, sin(t*(0.7+s.z*0.6)+s.w*6.283)*1.1 + sin(t*0.3+s.x*9.0)*0.6, cos(t*(0.45+s.y*0.7)+s.x*6.283)*2.3);
+        vec3 p = aBase + drift;
+        float k = clamp(uPull * 2.2 - s.w * 1.2, 0.0, 1.0); k = k * k * (3.0 - 2.0 * k);
+        vec3 a1 = uStreamA + (s.xyz - 0.5) * 1.1;
+        vec3 q = mix(mix(p, a1, k), mix(a1, uTablet, k), k);
+        mat3 rm = rotXYZ(s.xyz * 6.283 + t * (0.6 + s.w * 1.8) * vec3(1.0, 1.3, 0.8));
+        float sc = (0.8 + s.y * 0.5) * (1.0 - smoothstep(0.82, 1.0, k)) * mix(1.0, 0.5, k) * smoothstep(2.0, 6.0, distance(q, uCam));
+        vec3 n = rm * normal;
+        vec3 wp = q + rm * (position * sc);
+        vec3 toP = wp - uTruckPos; float dist = length(toP);
+        float cone = smoothstep(0.62, 0.94, dot(toP / max(dist, 0.001), normalize(uTruckDir))) / (1.0 + dist * dist * 0.0035);
+        float facing = abs(dot(n, normalize(toP)));
+        vec3 col = uPaper * (uAmb3 + uHead * cone * (0.35 + facing) * 1.7 * uHeadAmt);
+        col = mix(col, uCyan * 1.25, smoothstep(0.3, 0.7, k));
+        vCol = col;
+        vec4 mvPosition = viewMatrix * vec4(wp, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+      }`,
+    fragmentShader: `uniform float uSpec; uniform vec3 uCyan; varying vec3 vCol;
+      #include <fog_pars_fragment>
+      void main(){ gl_FragColor = vec4(uSpec > 0.5 ? uCyan * 0.8 : vCol, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        #include <fog_fragment>
+      }`,
+    side: THREE.DoubleSide, fog: true
+  });
+  const storm = new THREE.InstancedMesh(stormGeo, stormMat, NSHEET); storm.frustumCulled = false; scene.add(storm);
+  let stormTime = 0;
+  // Tablet
+  const tablet = new THREE.Group(); tablet.position.copy(tabletPos); scene.add(tablet);
+  {
+    const scr = canvasTex(256, 168, (g, w, h) => {
+      g.fillStyle = '#0d2a33'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#3EE6D0'; g.fillRect(14, 14, w - 28, 16);
+      g.fillStyle = 'rgba(232,236,241,.75)'; for (let i = 0; i < 4; i++) g.fillRect(14, 44 + i * 18, (w - 28) * (0.9 - i * 0.12), 6);
+      g.strokeStyle = '#3EE6D0'; g.lineWidth = 4; g.beginPath(); g.moveTo(20, 140); g.bezierCurveTo(50, 110, 70, 160, 100, 132); g.bezierCurveTo(120, 118, 130, 150, 150, 136); g.stroke();
+      g.beginPath(); g.moveTo(196, 132); g.lineTo(210, 146); g.lineTo(236, 114); g.stroke();
+    });
+    box(3.3, 2.2, 0.14, M(0x1a2230), 0, 0, 0, tablet);
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 1.95), new THREE.MeshBasicMaterial({ map: scr, color: 0xffffff }));
+    s.position.z = 0.075; tablet.add(s);
+    T.tabletGlow = glowSprite(0x3EE6D0, 5.5, 0.3); tablet.add(T.tabletGlow);
+    frameAt(R.stopU - 0.06, F2);
+    tablet.lookAt(frameAt(U.tablet - 0.02, F2).p.clone().setY(3));
+  }
+
+  // ---------- Chapter 3: checkpoint, queue, bypass lanes ----------
+  frameAt(U.check, F);
+  const checkF = { p: F.p.clone(), f: F.f.clone(), r: F.r.clone() };
+  const check = new THREE.Group(); check.position.copy(checkF.p); check.lookAt(checkF.p.clone().add(checkF.f)); scene.add(check);
+  const glowLv = { issued: 0, sheets: 0, month: 0 };
+  let glowKey = null;
+  R.on('glow', k => { glowKey = k; });
+  {
+    const steel = M(0x5a6678), boothM = M(0x2c3646);
+    box(0.3, 5.4, 0.3, steel, 3.4, 2.7, 0, check); box(0.3, 5.4, 0.3, steel, -3.4, 2.7, 0, check);
+    box(7.4, 0.5, 0.6, steel, 0, 5.4, 0, check);
+    box(7.0, 0.14, 0.66, M(0x3a2a08, { emissive: 0xF2B544, emissiveIntensity: 0.9 }), 0, 5.08, 0, check);
+    for (const x of [3.4, -3.4]) box(0.34, 5.0, 0.08, M(0x3a2a08, { emissive: 0xF2B544, emissiveIntensity: 0.5 }), x, 2.6, -0.17, check);
+    box(1.6, 2.4, 1.6, boothM, 4.6, 1.2, 0.3, check);
+    box(1.4, 0.5, 0.05, M(0x0b1320, { emissive: 0x3a2a10 }), 4.6, 1.7, 1.12, check);
+    const stripes = canvasTex(256, 16, (g, w, h) => { for (let x = 0; x < w; x += 32) { g.fillStyle = (x / 32) % 2 ? '#E8ECF1' : '#F2B544'; g.fillRect(x, 0, 32, h); } });
+    T.arm = new THREE.Group(); T.arm.position.set(3.2, 1.1, 0.6); check.add(T.arm);
+    box(6.0, 0.16, 0.16, M(0xffffff, { map: stripes }), -3.0, 0, 0, T.arm);
+    T.beaconMat = M(0x5a3a08, { emissive: 0xF2B544, emissiveIntensity: 1.2 });
+    const b = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), T.beaconMat); b.position.set(0, 5.95, 0); check.add(b);
+    T.beaconGlow = glowSprite(0xF2B544, 3.5, 0.6); T.beaconGlow.position.set(0, 5.95, 0); check.add(T.beaconGlow);
+    // funnel blocks narrowing the road
+    const blk = M(0x6b7484);
+    for (let i = 0; i < 5; i++) for (const s of [-1, 1]) {
+      const m = box(0.5, 0.7, 1.4, blk, s * (5.6 - i * 0.55), 0.35, -6 - i * 2.2, check); m.rotation.y = s * 0.24;
+    }
+  }
+  const lanes = {};
+  const LANE_DEF = { link: 7.5, qr: 13, auto: -7.5 };
+  const NT = 30;
+  const tileGeo = new THREE.BoxGeometry(1, 0.06, 1);
+  function lanePoint(ln, s, out) {
+    const u = lerp(ln.u0, ln.u1, s); frameAt(u, F);
+    const off = ln.off * sstep(0, 0.26, s) * (1 - sstep(0.74, 1, s));
+    return out.copy(F.p).addScaledVector(F.r, off).setY(F.p.y + 0.1);
+  }
+  Object.entries(LANE_DEF).forEach(([id, off]) => {
+    const ln = { id, off, u0: U.check - 44 / L, u1: U.check + 40 / L, open: false, start: 0 };
+    ln.tiles = new THREE.InstancedMesh(tileGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }), NT);
+    ln.edges = new THREE.InstancedMesh(tileGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }), NT * 2);
+    ln.tileData = [];
+    const a = new V3(), b = new V3();
+    for (let k = 0; k < NT; k++) {
+      lanePoint(ln, k / NT, a); lanePoint(ln, (k + 1) / NT, b);
+      const mid = a.clone().add(b).multiplyScalar(0.5), len = a.distanceTo(b) * 1.04, yaw = Math.atan2(b.x - a.x, b.z - a.z);
+      ln.tileData.push({ mid, len, yaw });
+      ln.tiles.setColorAt(k, new Col(0x123039));
+      ln.edges.setColorAt(k * 2, CYAN); ln.edges.setColorAt(k * 2 + 1, CYAN);
+    }
+    const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    for (let k = 0; k < NT; k++) { ln.tiles.setMatrixAt(k, zero); ln.edges.setMatrixAt(k * 2, zero); ln.edges.setMatrixAt(k * 2 + 1, zero); }
+    ln.tiles.frustumCulled = ln.edges.frustumCulled = false;
+    scene.add(ln.tiles, ln.edges);
+    lanes[id] = ln;
+  });
+  const QMAX = 64;
+  const tinyGeo = mergeGeoms([shadedBox(0.95, 0.95, 1.35, 0, 0.66, -0.2), shadedBox(0.9, 0.72, 0.55, 0, 0.52, 0.78, 0.92), shadedBox(0.96, 0.2, 1.9, 0, 0.18, 0, 0.45)]);
+  const queueMesh = new THREE.InstancedMesh(tinyGeo, new THREE.MeshBasicMaterial({ vertexColors: true }), QMAX);
+  queueMesh.frustumCulled = false; scene.add(queueMesh);
+  const qt = [];
+  for (let i = 0; i < QMAX; i++) { qt.push({ state: 'hidden', pos: new V3(), yaw: 0, born: 0, u: 0, row: 0, c: 0 }); queueMesh.setColorAt(i, AMBER); }
+  const queued = [];
+  function slotInfo(j) {
+    const depth = Math.floor(j / 2), row = j % 2 ? 1.4 : -1.4, u = U.check - (2.6 + depth * 1.7) / L;
+    frameAt(u, F);
+    return { p: F.p.clone().addScaledVector(F.r, row), yaw: Math.atan2(F.f.x, F.f.z), u, row };
+  }
+  function buildPeelPath(q, ln) {
+    const pts = [q.pos.clone()];
+    if (q.u < ln.u0) {
+      for (let d = 3; q.u + d / L < ln.u0; d += 3) { frameAt(q.u + d / L, F); pts.push(F.p.clone().addScaledVector(F.r, q.row).setY(0.1)); }
+    }
+    const sj = clamp((q.u + 3 / L - ln.u0) / (ln.u1 - ln.u0), 0.0, 0.6);
+    for (let s = Math.max(sj, 0) + 0.03; s <= 1.0001; s += 1 / 40) pts.push(lanePoint(ln, Math.min(1, s), new V3()));
+    for (let d = 4; d <= 70; d += 4) { frameAt(ln.u1 + d / L, F); pts.push(F.p.clone().addScaledVector(F.r, -1.4).setY(0.1)); }
+    const cum = [0];
+    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
+    return { pts, cum, total: cum[cum.length - 1] };
+  }
+  function openLane3D(id, peel, instant) {
+    const ln = lanes[id]; if (!ln || ln.open) return;
+    ln.open = true; ln.start = instant ? -999 : R.time;
+    const take = queued.splice(0, Math.min(peel, queued.length));
+    take.forEach((i, k) => {
+      const q = qt[i];
+      if (instant) { q.state = 'hidden'; return; }
+      q.state = 'peel'; q.ln = ln; q.start = R.time + 0.75 + k * 0.11; q.path = buildPeelPath(q, ln); q.dist = 0; q.v = 0;
+    });
+  }
+  R.on('lane', e => openLane3D(e.id, e.peel, e.instant));
+  for (const id of Object.keys(R.game.lanes)) if (R.game.lanes[id]) openLane3D(id, 0, true);
+  const qM = new THREE.Matrix4(), qQ = new THREE.Quaternion(), qS = new V3(), qC = new Col();
+  function samplePath(path, d, out) {
+    const { pts, cum } = path; let i = 1;
+    while (i < cum.length - 1 && cum[i] < d) i++;
+    const t = clamp((d - cum[i - 1]) / Math.max(1e-4, cum[i] - cum[i - 1]), 0, 1);
+    out.copy(pts[i - 1]).lerp(pts[i], t);
+    return Math.atan2(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z);
+  }
+  function updateQueue(C, dt, time) {
+    const vis = C > 1.4 && C < 4.4;
+    queueMesh.visible = vis; Object.values(lanes).forEach(ln => { ln.tiles.visible = ln.edges.visible = C > 1.4 && C < 4.6; });
+    check.visible = C > 1.2 && C < 4.6;
+    if (!vis) return;
+    const want = Math.min(R.game.queue, QMAX);
+    while (queued.length < want) {
+      const i = qt.findIndex(q => q.state === 'hidden'); if (i < 0) break;
+      const q = qt[i], si = slotInfo(queued.length);
+      q.state = 'queued'; q.pos.copy(si.p); q.yaw = si.yaw; q.u = si.u; q.row = si.row; q.born = R.motionOff() ? -99 : time; q.c = 0;
+      queued.push(i);
+    }
+    while (queued.length > want) { const i = queued.pop(); qt[i].state = 'hidden'; }
+    const waiting = qt.filter(q => q.state === 'peel' && time < q.start).length;
+    const kk = R.motionOff() ? 1 : 1 - Math.exp(-dt * 3);
+    queued.forEach((i, j) => {
+      const q = qt[i], si = slotInfo(j + waiting);
+      q.pos.lerp(si.p, kk); q.u = lerp(q.u, si.u, kk); q.row = si.row; q.yaw = si.yaw;
+    });
+    const gS = glowLv.sheets;
+    for (let i = 0; i < QMAX; i++) {
+      const q = qt[i];
+      if (q.state === 'hidden') { queueMesh.setMatrixAt(i, qM.makeScale(0, 0, 0)); continue; }
+      let sc = 1, y = 0;
+      if (q.state === 'queued') {
+        const b = sstep(0, 0.45, time - q.born); sc = b; y = (1 - b) * 1.2;
+        qC.copy(AMBER).multiplyScalar(0.85 + gS * 0.9);
+      } else {
+        if (time >= q.start) {
+          q.v = Math.min(17, q.v + dt * 26); q.dist += q.v * dt;
+          if (q.dist >= q.path.total) { q.state = 'hidden'; queueMesh.setMatrixAt(i, qM.makeScale(0, 0, 0)); continue; }
+          q.yaw = samplePath(q.path, q.dist, q.pos);
+          q.c = Math.min(1, q.c + dt * 1.4);
+          sc = 1 - sstep(q.path.total - 8, q.path.total, q.dist);
+        }
+        qC.copy(AMBER).lerp(CYAN, q.c).multiplyScalar(0.9 + gS * 0.8 + glowLv.issued * 0.5);
+      }
+      qQ.setFromAxisAngle(UP, q.yaw); qS.setScalar(Math.max(0.0001, sc));
+      tmpV.copy(q.pos); tmpV.y += y;
+      queueMesh.setMatrixAt(i, qM.compose(tmpV, qQ, qS));
+      queueMesh.setColorAt(i, qC);
+    }
+    queueMesh.instanceMatrix.needsUpdate = true; queueMesh.instanceColor.needsUpdate = true;
+    // lanes
+    const gI = glowLv.issued;
+    Object.values(lanes).forEach(ln => {
+      if (!ln.open) return;
+      const el = time - ln.start;
+      for (let k = 0; k < NT; k++) {
+        const td = ln.tileData[k];
+        const a = R.motionOff() || ln.start < -100 ? 1 : sstep(0, 0.16, el - 0.04 - k * (1 / NT));
+        if (a <= 0) { qM.makeScale(0, 0, 0); ln.tiles.setMatrixAt(k, qM); ln.edges.setMatrixAt(k * 2, qM); ln.edges.setMatrixAt(k * 2 + 1, qM); continue; }
+        qQ.setFromAxisAngle(UP, td.yaw);
+        tmpV.copy(td.mid); tmpV.y += (1 - a) * 0.9;
+        qS.set(2.8 * a, 1, td.len * a); ln.tiles.setMatrixAt(k, qM.compose(tmpV, qQ, qS));
+        ln.tiles.setColorAt(k, qC.set(0x123039).lerp(CYAN, 0.12 + gI * 0.35 + (1 - a) * 0.5));
+        for (const s of [-1, 1]) {
+          tmpV2.set(s * 1.45, 0.04, 0).applyQuaternion(qQ).add(tmpV);
+          qS.set(0.14 * a, 1.4, td.len * a);
+          ln.edges.setMatrixAt(k * 2 + (s > 0 ? 1 : 0), qM.compose(tmpV2, qQ, qS));
+          ln.edges.setColorAt(k * 2 + (s > 0 ? 1 : 0), qC.copy(CYAN).multiplyScalar(0.75 + gI * 0.9));
+        }
+      }
+      ln.tiles.instanceMatrix.needsUpdate = ln.edges.instanceMatrix.needsUpdate = true;
+      ln.tiles.instanceColor.needsUpdate = ln.edges.instanceColor.needsUpdate = true;
+    });
+    // barrier lifts once the queue is clear; beacon glows on hover of "378"
+    const clear = R.game.done && queued.length === 0;
+    T.armA = lerp(T.armA || 0, clear ? 1 : 0, R.motionOff() ? 1 : 1 - Math.exp(-dt * 2.5));
+    T.arm.rotation.z = -T.armA * 1.35;
+    T.beaconMat.emissiveIntensity = 1.2 + glowLv.month * 3;
+    T.beaconGlow.material.opacity = 0.5 + glowLv.month * 0.5; T.beaconGlow.scale.setScalar(3.5 + glowLv.month * 5);
+  }
+
+  // ---------- Chapter 4: signs being finished as the truck passes ----------
+  const signs = [];
+  {
+    const faces = [
+      (g, w, h) => { g.strokeStyle = '#3EE6D0'; g.lineWidth = 10; g.beginPath(); g.moveTo(60, h / 2); g.lineTo(w - 70, h / 2); g.stroke(); g.beginPath(); g.moveTo(w - 110, h / 2 - 34); g.lineTo(w - 66, h / 2); g.lineTo(w - 110, h / 2 + 34); g.stroke(); },
+      (g, w, h) => { g.strokeStyle = '#E8ECF1'; g.lineWidth = 6; g.strokeRect(w / 2 - 40, 26, 80, h - 52); g.strokeStyle = '#3EE6D0'; g.lineWidth = 9; g.beginPath(); g.moveTo(w / 2 - 22, h / 2 + 4); g.lineTo(w / 2 - 4, h / 2 + 22); g.lineTo(w / 2 + 26, h / 2 - 16); g.stroke(); },
+      (g, w, h) => { g.strokeStyle = '#3EE6D0'; g.lineWidth = 7; g.setLineDash([18, 12]); g.beginPath(); g.moveTo(50, h - 40); g.bezierCurveTo(110, 20, 160, h, w - 50, 40); g.stroke(); g.setLineDash([]); g.fillStyle = '#E8ECF1'; g.beginPath(); g.arc(w - 50, 40, 10, 0, 7); g.fill(); }
+    ];
+    const faceTex = faces.map(fn => canvasTex(256, 148, (g, w, h) => { g.fillStyle = '#122030'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(62,230,208,.8)'; g.lineWidth = 6; g.strokeRect(5, 5, w - 10, h - 10); fn(g, w, h); }));
+    const noteTex = canvasTex(200, 250, (g, w, h) => {
+      g.fillStyle = '#f3d590'; g.fillRect(0, 0, w, h);
+      g.fillStyle = 'rgba(60,50,30,.55)'; for (let i = 0; i < 9; i++) g.fillRect(18, 24 + i * 22, 120 - (i % 3) * 22, 6);
+      g.strokeStyle = '#d6332b'; g.lineWidth = 3;
+      g.beginPath(); g.moveTo(14, 71); g.lineTo(130, 75); g.stroke();
+      g.beginPath(); g.moveTo(14, 137); g.lineTo(100, 133); g.stroke();
+      g.beginPath(); g.ellipse(70, 180, 46, 14, -0.05, 0, 7); g.stroke();
+      g.beginPath(); g.moveTo(150, 30); for (let x = 150; x < 190; x += 6) g.lineTo(x, 30 + (x % 12 ? 6 : 0)); g.stroke();
+      g.beginPath(); g.moveTo(150, 52); for (let x = 150; x < 186; x += 6) g.lineTo(x, 52 + (x % 12 ? 6 : 0)); g.stroke();
+      g.beginPath(); g.moveTo(146, 160); g.quadraticCurveTo(170, 190, 150, 215); g.lineTo(158, 205); g.stroke();
+    });
+    const panelGeo = new THREE.BoxGeometry(2.7, 1.56, 0.1), postGeo = new THREE.BoxGeometry(0.14, 3.3, 0.14).translate(0, 1.65, 0);
+    for (let i = 0; i < 6; i++) {
+      const u = U.pave0 + (i + 0.7) * (U.pave1 - U.pave0) / 6.4, side = i % 2 ? 1 : -1;
+      frameAt(u, F);
+      const g = new THREE.Group(); g.position.copy(F.p).addScaledVector(F.r, side * 5.7); g.lookAt(g.position.clone().addScaledVector(F.f, -10)); scene.add(g);
+      const solidMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: faceTex[i % 3], emissive: 0xffffff, emissiveMap: faceTex[i % 3], emissiveIntensity: 0.45, transparent: true, opacity: 0, roughness: 0.8 });
+      const postMat = M(0x5a6678, { transparent: true, opacity: 0 });
+      const post = new THREE.Mesh(postGeo, postMat); g.add(post);
+      const panel = new THREE.Mesh(panelGeo, solidMat); panel.position.y = 3.6; g.add(panel);
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x3EE6D0, transparent: true, opacity: 0.8 });
+      const e1 = new THREE.LineSegments(new THREE.EdgesGeometry(panelGeo), lineMat); e1.position.y = 3.6; g.add(e1);
+      const e2 = new THREE.LineSegments(new THREE.EdgesGeometry(postGeo), lineMat); g.add(e2);
+      const note = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.2), new THREE.MeshBasicMaterial({ map: noteTex, transparent: true, opacity: 0.95, side: THREE.DoubleSide }));
+      note.position.set(side * -1.85, 3.9, 0.35); note.rotation.set(0.05, side * -0.35, side * 0.12); g.add(note);
+      signs.push({ u, g, solidMat, postMat, lineMat, note, side, ph: rnd() * 6 });
+    }
+  }
+  function updateSigns(C, u, time) {
+    const vis = C > 2.6 && C < 5.2;
+    for (const s of signs) {
+      s.g.visible = vis; if (!vis) continue;
+      const k = sstep(s.u - 34 / L, s.u - 6 / L, u);
+      s.solidMat.opacity = k; s.postMat.opacity = k; s.solidMat.depthWrite = s.postMat.depthWrite = k > 0.95;
+      s.lineMat.opacity = 0.8 * (1 - k) + 0.04;
+      s.note.material.opacity = 0.95 * (1 - k); s.note.visible = k < 0.99;
+      s.note.position.y = 3.9 + k * 1.6 + Math.sin(time * 1.3 + s.ph) * 0.08;
+    }
+  }
+
+  // ---------- Chapter 5: islands and a bridge of cards ----------
+  const bridge = new THREE.Group(); scene.add(bridge);
+  const planks = [];
+  const islandC = {};
+  const gapF = frameAt(U.gap); gapF.p.y = 3.5;
+  {
+    const isl = (u, color, emi) => {
+      frameAt(u, F);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(20, 22.5, 3.5, 8), M(color, { emissive: emi, emissiveIntensity: 0.18 }));
+      m.position.copy(F.p).setY(1.75); m.rotation.y = rnd(); bridge.add(m);
+      return { p: F.p.clone().setY(3.5), f: F.f.clone(), r: F.r.clone() };
+    };
+    islandC.a = isl(U.gap - (GH + 20) / L, 0x5a4220, 0xF2B544);
+    islandC.b = isl(U.gap + (GH + 20) / L, 0x1f4a4a, 0x3EE6D0);
+    frameAt(U.gap, F);
+    const river = new THREE.Mesh(new THREE.PlaneGeometry(2 * GH + 1, 260).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x0f2e44, roughness: 0.25, metalness: 0.5, emissive: 0x08202f, polygonOffset: true, polygonOffsetFactor: -1 }));
+    river.position.copy(F.p).setY(0.08); river.rotation.y = Math.atan2(F.f.x, F.f.z); bridge.add(river);
+    const winTex = (warm) => canvasTex(64, 64, (g, w, h) => { g.fillStyle = warm ? '#3a2c18' : '#13303a'; g.fillRect(0, 0, w, h); g.fillStyle = warm ? '#ffcf7a' : '#7ff5e6'; for (let y = 10; y < 58; y += 16) for (let x = 8; x < 58; x += 16) if ((x + y) % 3) g.fillRect(x, y, 8, 7); });
+    const wW = winTex(true), wC = winTex(false);
+    const building = (c, lat, fw, w, h, d, tex, roof, label, cls) => {
+      const p = c.p.clone().addScaledVector(c.r, lat).addScaledVector(c.f, fw);
+      const g = new THREE.Group(); g.position.copy(p); g.rotation.y = Math.atan2(c.f.x, c.f.z); bridge.add(g);
+      box(w, h, d, new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.55, roughness: 0.9, flatShading: true }), 0, h / 2, 0, g);
+      const r = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.75, 1.3, 4), M(roof)); r.position.y = h + 0.65; r.rotation.y = Math.PI / 4; g.add(r);
+      if (label) addLabel(label, p.clone().setY(p.y + h + 2.4), c2 => c2 > 3.7 && c2 < 5.15, cls);
+    };
+    building(islandC.a, -9, -2, 3.2, 3.2, 3, wW, 0x8a6a2e, 'Sales', 'amber');
+    building(islandC.a, -8.5, 6.5, 3, 2.6, 3.4, wW, 0x8a6a2e, 'Operations', 'amber');
+    building(islandC.a, 9, 1, 3.4, 3.8, 3, wW, 0x8a6a2e, 'Legal', 'amber');
+    building(islandC.b, 9.5, 2, 6, 3.6, 4.2, wC, 0x2c6a6a, 'Developers', '');
+    building(islandC.b, -8, -3, 1.6, 2.4, 1.6, wC, 0x2c6a6a);
+    building(islandC.b, -8, 1.5, 1.6, 2.4, 1.6, wC, 0x2c6a6a);
+    const cardTex = canvasTex(256, 220, (g, w, h) => {
+      g.fillStyle = '#132538'; g.fillRect(0, 0, w, h); g.fillStyle = '#3EE6D0'; g.fillRect(0, 0, w, 18);
+      g.fillStyle = 'rgba(232,236,241,.7)'; for (let i = 0; i < 4; i++) g.fillRect(24, 50 + i * 36, (w - 48) * (0.85 - i * 0.15), 10);
+      g.strokeStyle = 'rgba(62,230,208,.6)'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4);
+    });
+    const side = M(0x223448), top = new THREE.MeshStandardMaterial({ color: 0xffffff, map: cardTex, emissive: 0xffffff, emissiveMap: cardTex, emissiveIntensity: 0.35, roughness: 0.7 });
+    const pg = new THREE.BoxGeometry(5.8, 0.24, 5.0);
+    for (let i = 0; i < 5; i++) {
+      const u = U.gap - GH / L + (i + 0.5) * (2 * GH / 5) / L; frameAt(u, F);
+      const m = new THREE.Mesh(pg, [side, side, top, side, side, side]);
+      const home = F.p.clone().setY(3.5 - 0.06);
+      m.position.copy(home); m.lookAt(home.clone().add(F.f)); bridge.add(m);
+      planks.push({ m, home, q: m.quaternion.clone(), axis: new V3(rnd() - 0.5, 0, rnd() - 0.5).normalize() });
+    }
+  }
+  function updateBridge(C) {
+    const t = clamp(C - 4, 0, 1);
+    planks.forEach((p, i) => {
+      const a = sstep(0.1 + i * 0.09, 0.1 + i * 0.09 + 0.11, t), e = 1 - Math.pow(1 - a, 3);
+      p.m.visible = a > 0.001;
+      p.m.position.copy(p.home); p.m.position.y += (1 - e) * 14;
+      p.m.quaternion.copy(p.q).multiply(tmpQ.setFromAxisAngle(p.axis, (1 - e) * 1.1));
+    });
+  }
+
+  // ---------- Chapter 6: mast, Morse, signal rings and 70 lights ----------
+  const mastF = frameAt(U.mast);
+  frameAt(U.mast, F);
+  const mastBase = F.p.clone().addScaledVector(F.r, -12).setY(0);
+  const mastTop = mastBase.clone().setY(20.4);
+  const mastGrp = new THREE.Group(); mastGrp.position.copy(mastBase); scene.add(mastGrp);
+  {
+    const st = M(0x6c7789, { metalness: 0.4, roughness: 0.6 });
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.32, 20, 5), st); pole.position.y = 10; mastGrp.add(pole);
+    for (let i = 0; i < 6; i++) { const b = box(1.6 - i * 0.2, 0.06, 0.06, st, 0, 3 + i * 3, 0, mastGrp); b.rotation.y = i * 0.9; }
+    for (let i = 0; i < 3; i++) {
+      const g = new THREE.BufferGeometry().setFromPoints([new V3(0, 16, 0), new V3(Math.cos(i * 2.09) * 7, 0, Math.sin(i * 2.09) * 7)]);
+      mastGrp.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0x4a5566, transparent: true, opacity: 0.6 })));
+    }
+    T.morseMat = new THREE.MeshBasicMaterial({ color: 0xdffcff });
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), T.morseMat); lamp.position.y = 20.4; mastGrp.add(lamp);
+    T.morseGlow = glowSprite(0xbff8ff, 5, 1); T.morseGlow.position.y = 20.4; mastGrp.add(T.morseGlow);
+  }
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x6fe3c8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const rings = [0, 1, 2].map(() => { const r = new THREE.Mesh(new THREE.RingGeometry(0.985, 1, 128).rotateX(-Math.PI / 2), ringMat.clone()); r.position.copy(mastBase).setY(0.2); scene.add(r); return r; });
+  const LIGHTS = [];
+  {
+    const near = [];
+    for (let i = -0.12; i <= 0.12; i += 0.0008) { frameAt(U.mast + i, F); near.push(F.p.clone()); }
+    const distRoad = (x, z) => near.reduce((m, p) => Math.min(m, Math.hypot(p.x - x, p.z - z)), 1e9);
+    for (let i = 0; i < 3; i++) { const a = 0.6 + i * 2.09, r = 9 + i * 2.2; LIGHTS.push({ x: mastBase.x + Math.cos(a) * r, z: mastBase.z + Math.sin(a) * r, bright: true }); }
+    let guard = 0;
+    while (LIGHTS.length < 70 && guard++ < 5000) {
+      const a = rnd() * 6.283, r = 15 + Math.pow(rnd(), 0.85) * 62;
+      const x = mastBase.x + Math.cos(a) * r, z = mastBase.z + Math.sin(a) * r;
+      if (distRoad(x, z) < 6 || !pointPIP(x, z)) continue;
+      if (LIGHTS.some(l => Math.hypot(l.x - x, l.z - z) < 3.2)) continue;
+      LIGHTS.push({ x, z, bright: false });
+    }
+    LIGHTS.forEach(l => { l.d = Math.hypot(l.x - mastBase.x, l.z - mastBase.z); });
+    LIGHTS.sort((a, b) => a.d - b.d);
+    for (let i = 1; i < LIGHTS.length; i++) if (LIGHTS[i].d - LIGHTS[i - 1].d < 0.6) LIGHTS[i].d = LIGHTS[i - 1].d + 0.6;
+  }
+  const lightMesh = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.42, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), LIGHTS.length);
+  const lightPts = makePoints(LIGHTS.length);
+  LIGHTS.forEach((l, i) => {
+    const s = l.bright ? 1.4 : 1;
+    lightMesh.setMatrixAt(i, tmpM.compose(new V3(l.x, 0.75, l.z), tmpQ.identity(), new V3(s, s, s)));
+    lightMesh.setColorAt(i, new Col(0x1a2a33));
+    lightPts.geometry.attributes.position.setXYZ(i, l.x, 0.8, l.z);
+    lightPts.geometry.attributes.aSize.setX(i, l.bright ? 7 : 4.4);
+  });
+  scene.add(lightMesh, lightPts);
+  const LIT = new Col(0x6fe3c8), LIT_B = new Col(0xd0fff6), DIM = new Col(0x1a2a33);
+  const MORSE = [[0, 3], [4, 7], [10, 13], [14, 17]]; // dash-dash, dash-dash in units of 24
+  function updateSignal(C, time) {
+    const t = clamp(C - 5, 0, 1);
+    const vis = C > 4.4 && C < 7.2;
+    mastGrp.visible = lightMesh.visible = lightPts.visible = vis;
+    rings.forEach(r => { r.visible = vis; });
+    if (!vis) return;
+    const Rr = sstep(0.1, 0.82, t) * 84;
+    rings.forEach((r, i) => {
+      const rad = Rr - i * 14;
+      r.visible = rad > 0.5 && ovW < 0.3; r.scale.set(Math.max(rad, 0.01), 1, Math.max(rad, 0.01));
+      r.material.opacity = rad > 0 ? (1 - rad / 90) * 0.55 * (1 - i * 0.25) : 0;
+    });
+    const col = lightPts.geometry.attributes.aColor;
+    LIGHTS.forEach((l, i) => {
+      const on = clamp((Rr - l.d) / 5, 0, 1);
+      lightMesh.setColorAt(i, qC.copy(DIM).lerp(l.bright ? LIT_B : LIT, on));
+      const c = l.bright ? LIT_B : LIT;
+      col.setXYZW(i, c.r, c.g, c.b, on * (l.bright ? 1 : 0.7));
+    });
+    lightMesh.instanceColor.needsUpdate = true; col.needsUpdate = true;
+    let on = 1;
+    if (!R.motionOff()) {
+      const unit = 0.34, ph = (time / unit) % 24;
+      on = 0; for (const [a, b] of MORSE) if (ph >= a && ph < b) on = 1;
+    }
+    T.morseL = lerp(T.morseL || 0, on, R.motionOff() ? 1 : 0.35);
+    T.morseMat.color.setRGB(0.25 + T.morseL * 0.75, 0.3 + T.morseL * 0.7, 0.32 + T.morseL * 0.68);
+    T.morseGlow.material.opacity = 0.8 * T.morseL; T.morseGlow.scale.setScalar(2 + T.morseL * 2.4);
+  }
+
+  // ---------- Chapter 7: the map reveal ----------
+  const routeRibbon = (() => {
+    const g = ribbonGeo(0, 1, NS / 4, 7, 0.9), u = g.attributes.aU, c = new Float32Array(u.count * 3), tc = new Col();
+    for (let i = 0; i < u.count; i++) { tc.copy(AMBER).lerp(CYAN, sstep(0.05, 0.6, u.getX(i))); c[i * 3] = tc.r; c[i * 3 + 1] = tc.g; c[i * 3 + 2] = tc.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false, depthTest: false, side: THREE.DoubleSide }));
+    m.renderOrder = 5; m.frustumCulled = false; m.material.userData.noSpec = true; scene.add(m); return m;
+  })();
+  const markerU = [0.01, 0.07, U.check, (U.pave0 + U.pave1) / 2, U.gap, U.mast];
+  const markerNames = ['Start', 'Paper storm', 'Bottleneck', 'Paving', 'Bridge', 'Signal'];
+  const markers = makePoints(markerU.length + 1, false);
+  markers.material.depthTest = false; markers.renderOrder = 6;
+  markerU.concat([1]).forEach((u, i) => {
+    frameAt(u, F);
+    markers.geometry.attributes.position.setXYZ(i, F.p.x, 2, F.p.z);
+    const c = i === markerU.length ? CYAN : AMBER.clone().lerp(CYAN, sstep(0.05, 0.6, u));
+    markers.geometry.attributes.aColor.setXYZW(i, c.r, c.g, c.b, 1);
+    markers.geometry.attributes.aSize.setX(i, i === markerU.length ? 34 : 20);
+    if (i < markerU.length) addLabel(markerNames[i], F.p.clone().setY(2), () => ovW > 0.6, 'small', [0, -14]);
+  });
+  scene.add(markers);
+  frameAt(1, F);
+  const tallinnP = F.p.clone();
+  addLabel('Tallinn', tallinnP.clone().setY(2), (C) => ovW > 0.45 || (C > 7 && C < 8.1), 'big', [0, -18]);
+
+  // ---------- Chapter 8: loading dock and the delivery note ----------
+  const dock = new THREE.Group(); scene.add(dock);
+  {
+    frameAt(0.996, F);
+    const p = F.p.clone().addScaledVector(F.r, 16);
+    dock.position.copy(p); dock.lookAt(F.p.clone().addScaledVector(F.r, -4));
+    box(24, 7, 14, M(0x2a3446), 0, 3.5, 0, dock);
+    box(24.4, 0.6, 14.4, M(0x3a465a), 0, 7.3, 0, dock);
+    box(24, 1.2, 3.2, M(0x4a5466), 0, 0.6, 8.6, dock);
+    const doorM = M(0x2a1a08, { emissive: 0xffcf8a, emissiveIntensity: 0.9 });
+    for (let i = -1; i <= 1; i++) { box(3.8, 4, 0.1, doorM, i * 7, 3.2, 7.06, dock); const g = glowSprite(0xffd59a, 6, 0.35); g.position.set(i * 7, 5.8, 7.8); dock.add(g); }
+    const ring = new THREE.Mesh(new THREE.RingGeometry(4, 4.6, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x3EE6D0, transparent: true, opacity: 0.55, depthWrite: false }));
+    ring.position.copy(tallinnP).setY(0.15); scene.add(ring);
+  }
+  const noteTex3 = canvasTex(256, 320, (g, w, h) => {
+    g.fillStyle = '#0f2236'; g.fillRect(0, 0, w, h); g.strokeStyle = '#3EE6D0'; g.lineWidth = 6; g.strokeRect(4, 4, w - 8, h - 8);
+    g.fillStyle = '#3EE6D0'; g.fillRect(22, 24, 110, 14);
+    g.fillStyle = 'rgba(232,236,241,.8)'; for (let i = 0; i < 6; i++) g.fillRect(22, 64 + i * 26, (w - 44) * (0.9 - (i % 3) * 0.15), 7);
+    g.fillStyle = 'rgba(232,236,241,.4)'; g.fillRect(22, h - 52, w - 44, 2);
+  });
+  const note3 = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.0), new THREE.MeshBasicMaterial({ map: noteTex3, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  note3.renderOrder = 8; scene.add(note3);
+  const note3Glow = glowSprite(0x3EE6D0, 5, 0); scene.add(note3Glow);
+  const camFwd = new V3();
+  function updateDelivery(C) {
+    const t = clamp(C - 7, 0, 1);
+    dock.visible = C > 6.0;
+    const open = sstep(0.4, 0.55, t);
+    T.door.scale.y = Math.max(0.06, 1 - open * 0.94);
+    T.inside.material.opacity = open * 0.8;
+    const k = sstep(0.5, 0.86, t);
+    note3.visible = note3Glow.visible = k > 0.001 && k < 0.999;
+    if (!note3.visible) return;
+    truck.localToWorld(tmpV.set(0, 2.0, -2.3));
+    camera.getWorldDirection(camFwd);
+    tmpV2.copy(camera.position).addScaledVector(camFwd, 2.4);
+    const e = k * k * (3 - 2 * k);
+    note3.position.copy(tmpV).lerp(tmpV2, e); note3.position.y += Math.sin(k * Math.PI) * 1.4;
+    note3.quaternion.copy(camera.quaternion);
+    note3.scale.setScalar(0.6 + e * 0.5);
+    note3.material.opacity = sstep(0, 0.1, k) * (1 - sstep(0.78, 1, k));
+    note3Glow.position.copy(note3.position); note3Glow.material.opacity = note3.material.opacity * 0.6;
+  }
+
+  // ---------- HTML labels ----------
+  addLabel('Sign', checkF.p.clone().setY(7.1), C => C > 1.85 && C < 2.98, 'amber');
+  const pv = new V3();
+  let W = 1, H = 1;
+  function updateLabels(C) {
+    for (const l of labels) {
+      let on = l.show(C);
+      if (on) {
+        pv.copy(l.pos).project(camera);
+        on = pv.z < 1 && pv.z > -1 && Math.abs(pv.x) < 1.15 && Math.abs(pv.y) < 1.15;
+        if (on) l.el.style.transform = `translate(${((pv.x * 0.5 + 0.5) * W + l.off[0]).toFixed(1)}px,${((-pv.y * 0.5 + 0.5) * H + l.off[1]).toFixed(1)}px) translate(-50%,-100%)`;
+      }
+      if (on !== l.on) { l.on = on; l.el.classList.toggle('on', on); }
+    }
+    // mast hit area
+    const mb = document.getElementById('mast-btn');
+    let mOn = C > 5.05 && C < 6.0;
+    if (mOn) {
+      pv.copy(mastBase).setY(11).project(camera);
+      mOn = pv.z < 1 && Math.abs(pv.x) < 0.95 && Math.abs(pv.y) < 0.95;
+      if (mOn) {
+        pv.set(0, 0, 0);
+        const a = mastBase.clone().setY(0).project(camera), b = mastTop.clone().project(camera);
+        const hpx = Math.max(60, Math.abs(a.y - b.y) * 0.5 * H + 20);
+        const x = (b.x * 0.5 + 0.5) * W, y = (-b.y * 0.5 + 0.5) * H - 10;
+        mb.style.height = hpx.toFixed(0) + 'px';
+        mb.style.transform = `translate(${(x - 28).toFixed(1)}px,${y.toFixed(1)}px)`;
+      }
+    }
+    if (mOn !== T.mastOn) {
+      T.mastOn = mOn; mb.style.visibility = mOn ? 'visible' : 'hidden'; mb.tabIndex = mOn ? 0 : -1;
+      if (!mOn) { mb.style.transform = 'translate(-9999px,0)'; mb.classList.remove('open'); }
+    }
+  }
+
+  // ---------- Spec view ----------
+  function applySpec(on) {
+    scene.traverse(o => {
+      if (!o.material) return;
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+        if (m.userData.specHide) { m.visible = !on; return; }
+        if (m.userData.noSpec) return;
+        if (on) {
+          if (!m.userData.s0) m.userData.s0 = { w: m.wireframe, c: m.color ? m.color.clone() : null, e: m.emissive ? m.emissive.clone() : null, map: m.map || null, em: m.emissiveMap || null, o: m.opacity };
+          m.wireframe = true;
+          if (m.color && !m.isShaderMaterial && !m.isLineBasicMaterial) m.color.set(0x8fd8ff);
+          if (m.emissive) m.emissive.set(0x123848);
+          if (m.map) { m.map = null; m.emissiveMap = null; m.needsUpdate = true; }
+          if (m.uniforms && m.uniforms.uSpec) m.uniforms.uSpec.value = 1;
+        } else if (m.userData.s0) {
+          const s = m.userData.s0; m.wireframe = s.w;
+          if (s.c) m.color.copy(s.c); if (s.e) m.emissive.copy(s.e);
+          if (s.map) { m.map = s.map; m.emissiveMap = s.em; m.needsUpdate = true; }
+          if (m.uniforms && m.uniforms.uSpec) m.uniforms.uSpec.value = 0;
+        }
+      });
+    });
+    sky.visible = stars.visible = aurora.visible = !on;
+    scene.background = on ? new Col(0x0B1220) : null;
+    if (bloom) bloom.enabled = !on;
+  }
+  R.on('spec', applySpec);
+
+  // ---------- Post ----------
+  let composer = null, bloom = null;
+  if (post) {
+    try {
+      composer = new post.EffectComposer(renderer);
+      composer.addPass(new post.RenderPass(scene, camera));
+      bloom = new post.UnrealBloomPass(new THREE.Vector2(512, 512), 0.42, 0.45, 0.82);
+      composer.addPass(bloom);
+      composer.addPass(new post.OutputPass());
+    } catch (e) { composer = null; bloom = null; }
+  }
+
+  // ---------- Resize ----------
+  let ovH = 900, ovShift = 0, distK = 1;
+  function resize() {
+    W = canvas.clientWidth || innerWidth; H = canvas.clientHeight || innerHeight;
+    renderer.setSize(W, H, false);
+    camera.aspect = W / H;
+    distK = camera.aspect < 1.25 ? lerp(1, 1.75, clamp((1.25 - camera.aspect) / 0.8, 0, 1)) : 1;
+    const desk = W > 900;
+    camera.setViewOffset(W, H, desk ? -W * 0.17 : 0, !desk && H > W ? H * 0.23 : 0, W, H);
+    camera.updateProjectionMatrix();
+    if (composer) composer.setSize(W, H);
+    const tanF = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    // Fit the map into the part of the screen the text does not cover
+    const fitW = desk ? 0.44 : 0.9, fitH = desk ? 0.84 : (H > W ? 0.46 : 0.8);
+    const hw = (bbMaxX - bbMinX) / 2 / fitW, hh = (bbMaxZ - bbMinZ) / 2 / fitH;
+    ovH = Math.max(hh / tanF, hw / (tanF * camera.aspect));
+    ovShift = desk ? (0.755 - 0.67) * 2 * ovH * tanF * camera.aspect : 0;
+    const px = renderer.getPixelRatio();
+    [heroPts, lightPts, markers].forEach(p => { p.material.uniforms.uPx.value = px; });
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  // ---------- Camera ----------
+  // [right, forward, height, look ahead, look height, look right] in the truck's frame
+  function camCfg(i, t) {
+    switch (i) {
+      case 0: return [8.5, -8.5, 3.6, 4, 1.9, -3.2];
+      case 1: { const b = sstep(0.38, 0.8, t); return [lerp(2.4, 5.5, b), lerp(-8.8, -17, b), lerp(3.4, 7.2, b), lerp(10, 18, b), lerp(2.4, 5.6, b), 0]; }
+      case 2: return [24, 24, 15, 36, 0, -2];
+      case 3: return [4.2, -13, 6.2, 18, 0, -1];
+      case 4: return [24, 4, 10, 12, 2.6, 0];
+      case 5: return [-6, -13, 4.2, 22, 8, 0];
+      case 6: return [0, -14, 9, 20, 2, 0];
+      default: return [3.4, -11.5, 3.6, 0, 1.9, 0];
+    }
+  }
+  const BLEND = [0.7, 0.75, 0.9, 0.75, 0.75, 0.75, 0.75, 1];
+  const camPos = new V3(), camTgt = new V3(), ovPos = new V3(), ovTgt = new V3();
+  const TF = mkF(), TF2 = mkF();
+  let ovW = 0, prevU = 0, revS = 0;
+  function updateCamera(C) {
+    const ci = Math.min(7, Math.floor(C)), ct = C - ci;
+    let cfg = camCfg(ci, ct);
+    if (ci < 7) { const b = sstep(BLEND[ci], 1, ct); if (b > 0) { const n = camCfg(ci + 1, 0); cfg = cfg.map((v, k) => lerp(v, n[k], b)); } }
+    camPos.copy(TF.p).addScaledVector(TF.r, cfg[0]).addScaledVector(TF.f, cfg[1]); camPos.y += cfg[2];
+    camTgt.copy(TF.p).addScaledVector(TF.f, cfg[3]).addScaledVector(TF.r, cfg[5]); camTgt.y += cfg[4];
+    camPos.y = Math.max(camPos.y, heightAt(R.u) + 1.2);
+    // The bottleneck is framed from the checkpoint, not the truck
+    const w2 = sstep(1.72, 2.0, C) * (1 - sstep(2.9, 3.02, C));
+    if (w2 > 0) {
+      tmpV.copy(checkF.p).addScaledVector(checkF.r, -47).addScaledVector(checkF.f, -15); tmpV.y += 33;
+      tmpV2.copy(checkF.p).addScaledVector(checkF.f, -12).addScaledVector(checkF.r, 2);
+      camPos.lerp(tmpV, w2); camTgt.lerp(tmpV2, w2);
+    }
+    // The bridge is framed from the gap
+    const w4 = sstep(3.72, 4.0, C) * (1 - sstep(4.84, 5.02, C));
+    if (w4 > 0) {
+      tmpV.copy(gapF.p).addScaledVector(gapF.r, 74).addScaledVector(gapF.f, -15); tmpV.y += 40;
+      tmpV2.copy(gapF.p).addScaledVector(gapF.f, -15);
+      camPos.lerp(tmpV, w4); camTgt.lerp(tmpV2, w4);
+    }
+    // The signal chapter is framed from across the road, facing the mast
+    const w5 = sstep(4.86, 5.12, C) * (1 - sstep(5.78, 6.0, C));
+    if (w5 > 0) {
+      tmpV.copy(mastF.p).addScaledVector(mastF.r, 20).addScaledVector(mastF.f, -50); tmpV.y = 20;
+      tmpV2.copy(mastF.p).addScaledVector(mastF.r, -12); tmpV2.y = 12;
+      camPos.lerp(tmpV, w5); camTgt.lerp(tmpV2, w5);
+    }
+    // Narrow screens see less sideways, so pull the camera back along its view line
+    if (distK !== 1) camPos.sub(camTgt).multiplyScalar(distK).add(camTgt);
+    ovW = sstep(5.85, 6.3, C) * (1 - sstep(6.8, 7.15, C));
+    if (ovW > 0) {
+      ovPos.set(mapC.x - ovShift, ovH, mapC.z + 0.01); ovTgt.copy(mapC); ovTgt.x -= ovShift;
+      camPos.lerp(ovPos, ovW); camTgt.lerp(ovTgt, ovW);
+    }
+    camera.position.copy(camPos);
+    camera.up.set(0, 1, 0).lerp(NORTH, ovW).normalize();
+    camera.lookAt(camTgt);
+    camera.rotateY(R.view.yaw); camera.rotateX(R.view.pitch);
+    const near = lerp(0.1, 20, ovW);
+    if (Math.abs(camera.near - near) > 0.01) { camera.near = near; camera.updateProjectionMatrix(); }
+  }
+  function placeTruck(u, dt) {
+    frameAt(u, TF);
+    truck.position.copy(TF.p);
+    const u2 = Math.min(1, u + 0.0016); frameAt(u2, TF2);
+    truck.lookAt(TF2.p);
+    const dist = u * L;
+    T.wheels.forEach(w => { w.rotation.x = dist / 0.46; });
+    const vel = (u - prevU) * L / Math.max(dt, 1e-3); prevU = u;
+    revS = lerp(revS, vel < -0.5 ? 1 : 0, 0.15);
+    T.tail.emissiveIntensity = 0.9 + revS * 0.8;
+    T.rev.emissiveIntensity = revS * 2.5;
+  }
+
+  // ---------- Frame ----------
+  const hU = [landMat, roadMat, stormMat];
+  function frame(dt, time) {
+    const C = R.C, u = R.u;
+    updateTOD(C);
+    sunDir.copy(duskDir).lerp(dawnDir, sstep(0.5, 7.6, C)).normalize();
+    const sm = sky.material.uniforms;
+    sm.uTop.value.copy(tod.top); sm.uMid.value.copy(tod.mid); sm.uHor.value.copy(tod.hor); sm.uSun.value = tod.sun;
+    scene.fog.color.copy(tod.hor).lerp(tod.mid, 0.55);
+    scene.fog.density = tod.fog * (1 - ovW) * (1 - ovW);
+    stars.material.opacity = tod.stars * 0.85;
+    sea.material.color.copy(tod.sea);
+    hemi.color.copy(tod.mid).lerp(WHITE, 0.25); hemi.groundColor.copy(tod.ground); hemi.intensity = 0.55 + tod.amb * 0.9;
+    sunL.color.copy(tod.hor).lerp(WHITE, 0.4); sunL.intensity = 0.25 + tod.sun * 1.1;
+    sunL.position.copy(truck.position).addScaledVector(sunDir, 100); sunL.target.position.copy(truck.position);
+    T.stripe.color.copy(AMBER).lerp(CYAN, sstep(1.4, 4.4, C)); T.stripe.emissive.copy(T.stripe.color);
+    T.spot.intensity = 30 * tod.head;
+    T.glows.forEach(g => { g.material.opacity = 0.9 * tod.head; });
+    landMat.uniforms.uGround.value.copy(tod.ground).lerp(tod.mid, ovW * 0.35);
+    landMat.uniforms.uGridAmt.value = 0.06 + ovW * 0.08;
+    roadMat.uniforms.uAmb.value = tod.amb;
+    stormMat.uniforms.uAmb3.value.copy(tod.hor).lerp(WHITE, 0.5).multiplyScalar(0.28 * tod.amb + 0.06);
+    coast.material.opacity = 0.35 + ovW * 0.6;
+    coast.material.color.setRGB(0.42 + ovW * 0.4, 0.49 + ovW * 0.4, 0.6 + ovW * 0.35);
+
+    placeTruck(u, dt);
+    updateCamera(C);
+    fill.position.copy(camera.position).addScaledVector(UP, 6); fill.target.position.copy(truck.position);
+    fill.intensity = 0.45 + (1 - tod.amb) * 0.5;
+    for (const m of hU) {
+      m.uniforms.uTruckPos.value.copy(TF.p);
+      m.uniforms.uTruckDir.value.copy(TF.f);
+      m.uniforms.uHeadAmt.value = tod.head;
+    }
+    sky.position.copy(camera.position); stars.position.copy(camera.position); aurora.position.copy(camera.position);
+    auroraMat.uniforms.uTime.value = time;
+    auroraMat.uniforms.uOpacity.value = sstep(4.5, 5.3, C) * (1 - sstep(6.0, 6.6, C)) * 0.85;
+    aurora.visible = !R.spec && auroraMat.uniforms.uOpacity.value > 0.001;
+
+    // glows from hovering the numbers
+    const gk = R.motionOff() ? 1 : 1 - Math.exp(-dt * 6);
+    for (const k of Object.keys(glowLv)) glowLv[k] = lerp(glowLv[k], glowKey === k ? 1 : 0, gk);
+
+    updateHero(time, C);
+    // storm
+    const ts = clamp(C - 1, 0, 1);
+    storm.visible = C > 0.8 && C < 3.4 && ovW < 0.01;
+    const freeze = sstep(0.16, 0.4, ts);
+    if (!R.motionOff()) stormTime += dt * (1 - freeze) * 0.9;
+    stormMat.uniforms.uTime.value = stormTime;
+    const pull = sstep(0.44, 0.95, ts);
+    stormMat.uniforms.uPull.value = pull;
+    tablet.visible = C > 0.8 && C < 3.6;
+    const tsc = sstep(0.3, 0.75, pull);
+    tablet.scale.setScalar(Math.max(0.001, tsc));
+    tablet.position.y = tabletPos.y + Math.sin(time * 0.8) * 0.15;
+    T.tabletGlow.material.opacity = tsc * 0.32;
+    stormMat.uniforms.uCam.value.copy(camera.position);
+
+    roadMat.uniforms.uFront.value = u + 5 / L;
+    wire.material.uniforms.uFront.value = u + 5 / L;
+    wire.visible = C > 2.3 && C < 4.6;
+
+    updateQueue(C, dt, time);
+    updateSigns(C, u, time);
+    updateBridge(C);
+    bridge.visible = C > 3.2 && C < 6.6 && ovW < 0.35;
+    updateSignal(C, time);
+    routeRibbon.material.opacity = ovW * 0.95; routeRibbon.visible = ovW > 0.01;
+    markers.material.uniforms.uOpacity.value = ovW; markers.visible = ovW > 0.01;
+    T.marker.material.opacity = ovW; T.marker.scale.setScalar(Math.max(0.01, ovW * ovH * 0.035));
+    updateDelivery(C);
+    updateLabels(C);
+
+    if (composer && !R.spec) composer.render(); else renderer.render(scene, camera);
+  }
+
+  // first frame, then fade in and let the wind take the sheets
+  R.frame = frame;
+  frame(0.016, R.time);
+  R.ready();
+  heroStart = R.time + 0.5;
+}
+</script>
+</body>
+</html>
